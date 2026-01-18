@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作流機器人系統 - 可視化設計器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 頂部導航 */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* 主要內容區域 */
+        .main-content {
+            margin-top: 60px;
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        /* 側邊欄 - 節點選擇器 */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e9ecef;
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 16px;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .node-categories {
+            padding: 0 16px;
+        }
+
+        .node-category {
+            margin-bottom: 24px;
+        }
+
+        .category-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            padding: 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .node-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .node-item:hover {
+            background: #f3f4f6;
+            border-color: #e5e7eb;
+        }
+
+        .node-item.selected {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .node-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .node-info {
+            flex: 1;
+        }
+
+        .node-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+
+        .node-description {
+            font-size: 0.8rem;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+
+        /* 主工作區域 */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workspace-header {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .workspace-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .workspace-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* 畫布區域 */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+        .canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* 工作流節點 */
+        .workflow-node {
+            position: absolute;
+            width: 200px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+
+        .workflow-node:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .workflow-node.selected {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .node-type-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+
+        .node-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .node-body {
+            padding: 12px 16px;
+        }
+
+        .node-setting {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        /* 連線相關樣式 */
+        .connections-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: #6366f1;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .connection-line.temp {
+            stroke: #94a3b8;
+            stroke-dasharray: 5,5;
+        }
+
+        .connection-point {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .connection-point:hover {
+            border-color: #6366f1;
+            background: #eff6ff;
+            transform: scale(1.2);
+        }
+
+        .connection-point.input {
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connection-point.output {
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connection-point.connecting {
+            border-color: #6366f1;
+            background: #6366f1;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* 拖拽效果增強 */
+        .workflow-node.dragging {
+            transform: rotate(2deg) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .node-ghost {
+            position: absolute;
+            opacity: 0.5;
+            pointer-events: none;
+            border: 2px dashed #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* 更多節點類型的樣式 */
+        .node-icon.trigger { background: linear-gradient(135deg, #10b981, #059669); }
+        .node-icon.ai { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .node-icon.data { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .node-icon.logic { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .node-icon.output { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+        /* 工具欄樣式 */
+        .toolbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding-right: 16px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .tool-btn {
+            padding: 6px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #374151;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tool-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .tool-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        /* 歡迎界面 */
+        .welcome-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(248, 249, 250, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .welcome-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 24px;
+            color: #2563eb;
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+
+        .quick-start-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .quick-start-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            min-width: 120px;
+        }
+
+        .quick-start-btn:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .quick-start-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .quick-start-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        /* 配置面板 */
+        .config-panel {
+            position: fixed;
+            top: 60px;
+            right: -400px;
+            width: 400px;
+            height: calc(100vh - 60px);
+            background: white;
+            border-left: 1px solid #e9ecef;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 200;
+            overflow-y: auto;
+        }
+
+        .config-panel.open {
+            right: 0;
+        }
+
+        .config-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .config-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .config-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .config-close:hover {
+            background: #f3f4f6;
+        }
+
+        .config-content {
+            padding: 20px;
+        }
+
+        .config-section {
+            margin-bottom: 24px;
+        }
+
+        .config-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .config-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航 -->
+    <header class="header">
+        <div class="logo">
+            <span>🚀</span>
+            工作流機器人系統
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="showTemplates()">
+                <span>📋</span> 模板
+            </button>
+            <button class="btn btn-primary" onclick="saveWorkflow()">
+                <span>💾</span> 保存
+            </button>
+            <button class="btn btn-secondary" onclick="showHelp()">
+                <span>❓</span> 幫助
+            </button>
+        </div>
+    </header>
+
+    <!-- 主要內容 -->
+    <main class="main-content">
+        <!-- 側邊欄 - 節點選擇器 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">節點選擇器</div>
+                <div class="sidebar-subtitle">拖拽節點到畫布中</div>
+            </div>
+            
+            <div class="node-categories">
+                <!-- 觸發器 -->
+                <div class="node-category">
+                    <div class="category-title">觸發器</div>
+                    <div class="node-item" draggable="true" data-type="whatsapp-trigger">
+                        <div class="node-icon" style="background: #25d366;">💬</div>
+                        <div class="node-info">
+                            <div class="node-name">WhatsApp 觸發器</div>
+                            <div class="node-description">接收 WhatsApp 消息</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="schedule-trigger">
+                        <div class="node-icon" style="background: #3b82f6;">⏰</div>
+                        <div class="node-info">
+                            <div class="node-name">定時觸發器</div>
+                            <div class="node-description">按時間計劃執行</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="webhook-trigger">
+                        <div class="node-icon" style="background: #8b5cf6;">🔗</div>
+                        <div class="node-info">
+                            <div class="node-name">Webhook 觸發器</div>
+                            <div class="node-description">接收 HTTP 請求</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 處理 -->
+                <div class="node-category">
+                    <div class="category-title">AI 處理</div>
+                    <div class="node-item" draggable="true" data-type="ai-image">
+                        <div class="node-icon" style="background: #f59e0b;">🖼️</div>
+                        <div class="node-info">
+                            <div class="node-name">圖片分析</div>
+                            <div class="node-description">AI 識別圖片內容</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="ai-text">
+                        <div class="node-icon" style="background: #10b981;">📝</div>
+                        <div class="node-info">
+                            <div class="node-name">文本處理</div>
+                            <div class="node-description">AI 分析文本內容</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="ai-chat">
+                        <div class="node-icon" style="background: #8b5cf6;">💭</div>
+                        <div class="node-info">
+                            <div class="node-name">智能對話</div>
+                            <div class="node-description">AI 對話生成</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 數據操作 -->
+                <div class="node-category">
+                    <div class="category-title">數據操作</div>
+                    <div class="node-item" draggable="true" data-type="google-sheets">
+                        <div class="node-icon" style="background: #16a34a;">📊</div>
+                        <div class="node-info">
+                            <div class="node-name">Google Sheets</div>
+                            <div class="node-description">讀寫 Google 表格</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="database">
+                        <div class="node-icon" style="background: #0ea5e9;">🗄️</div>
+                        <div class="node-info">
+                            <div class="node-name">資料庫</div>
+                            <div class="node-description">資料庫操作</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="email">
+                        <div class="node-icon" style="background: #dc2626;">✉️</div>
+                        <div class="node-info">
+                            <div class="node-name">發送郵件</div>
+                            <div class="node-description">發送電子郵件</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 邏輯控制 -->
+                <div class="node-category">
+                    <div class="category-title">邏輯控制</div>
+                    <div class="node-item" draggable="true" data-type="condition">
+                        <div class="node-icon" style="background: #f59e0b;">🔀</div>
+                        <div class="node-info">
+                            <div class="node-name">條件判斷</div>
+                            <div class="node-description">根據條件分支</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="delay">
+                        <div class="node-icon" style="background: #8b5cf6;">⏳</div>
+                        <div class="node-info">
+                            <div class="node-name">延遲執行</div>
+                            <div class="node-description">等待指定時間</div>
+                        </div>
+                    </div>
+                    <div class="node-item" draggable="true" data-type="loop">
+                        <div class="node-icon" style="background: #ec4899;">🔄</div>
+                        <div class="node-info">
+                            <div class="node-name">循環處理</div>
+                            <div class="node-description">重複執行操作</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 工作區域 -->
+        <div class="workspace">
+            <div class="workspace-header">
+                <div class="workspace-title">工作流設計器</div>
+                <div class="workspace-actions">
+                    <button class="btn btn-secondary" onclick="clearCanvas()">
+                        <span>🗑️</span> 清空
+                    </button>
+                    <button class="btn btn-secondary" onclick="runWorkflow()">
+                        <span>▶️</span> 測試執行
+                    </button>
+                </div>
+            </div>
+
+            <!-- 工具欄 -->
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="tool-btn active" data-tool="select" onclick="setTool('select')">
+                        <span>👆</span> 選擇
+                    </button>
+                    <button class="tool-btn" data-tool="connect" onclick="setTool('connect')">
+                        <span>🔗</span> 連線
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="zoomIn()">
+                        <span>🔍</span> 放大
+                    </button>
+                    <button class="tool-btn" onclick="zoomOut()">
+                        <span>🔍</span> 縮小
+                    </button>
+                    <button class="tool-btn" onclick="resetZoom()">
+                        <span>📐</span> 重置
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <span class="toolbar-info" id="toolbarInfo">準備就緒</span>
+                </div>
+            </div>
+            
+            <div class="canvas-container">
+                <div class="canvas" id="canvas">
+                    <!-- SVG連線層 -->
+                    <svg class="connections-layer" id="connectionsLayer">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                                    refX="10" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+                            </marker>
+                        </defs>
+                    </svg>
+                    <!-- 歡迎界面 -->
+                    <div class="welcome-overlay" id="welcomeOverlay">
+                        <div class="welcome-content">
+                            <div class="welcome-icon">🎨</div>
+                            <div class="welcome-title">歡迎使用工作流設計器</div>
+                            <div class="welcome-subtitle">選擇一個快速開始選項，或從左側拖拽節點開始設計</div>
+                            
+                            <div class="quick-start-buttons">
+                                <div class="quick-start-btn" onclick="createQuickWorkflow('expense')">
+                                    <div class="quick-start-icon">💰</div>
+                                    <div class="quick-start-text">費用記錄</div>
+                                </div>
+                                <div class="quick-start-btn" onclick="createQuickWorkflow('customer')">
+                                    <div class="quick-start-icon">🎧</div>
+                                    <div class="quick-start-text">客服助手</div>
+                                </div>
+                                <div class="quick-start-btn" onclick="createQuickWorkflow('scheduler')">
+                                    <div class="quick-start-icon">📅</div>
+                                    <div class="quick-start-text">定時提醒</div>
+                                </div>
+                                <div class="quick-start-btn" onclick="createQuickWorkflow('custom')">
+                                    <div class="quick-start-icon">🛠️</div>
+                                    <div class="quick-start-text">自訂流程</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 配置面板 -->
+    <div class="config-panel" id="configPanel">
+        <div class="config-header">
+            <div class="config-title">節點配置</div>
+            <button class="config-close" onclick="closeConfigPanel()">&times;</button>
+        </div>
+        <div class="config-content" id="configContent">
+            <div class="config-section">
+                <div class="config-section-title">基本設置</div>
+                <div class="form-group">
+                    <label class="form-label">節點名稱</label>
+                    <input type="text" class="form-input" placeholder="輸入節點名稱">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-textarea" placeholder="輸入節點描述"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變數
+        let currentWorkflow = [];
+        let connections = [];
+        let selectedNode = null;
+        let draggedNodeType = null;
+        let nodeCounter = 0;
+        let currentTool = 'select';
+        let isConnecting = false;
+        let connectionStart = null;
+        let tempConnection = null;
+        let canvasZoom = 1;
+        let canvasOffset = { x: 0, y: 0 };
+
+        // 頁面載入完成
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDragAndDrop();
+            setupCanvasEvents();
+            setupConnectionPoints(); // 新增
+            checkForExistingWorkflow();
+            
+            // 設置默認工具
+            setTool('select');
+        });
+
+        // 設置拖拽功能
+        function setupDragAndDrop() {
+            const nodeItems = document.querySelectorAll('.node-item');
+            const canvas = document.getElementById('canvas');
+
+            nodeItems.forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    draggedNodeType = this.dataset.type;
+                    this.style.opacity = '0.5';
+                });
+
+                item.addEventListener('dragend', function(e) {
+                    this.style.opacity = '1';
+                    draggedNodeType = null;
+                });
+            });
+
+            canvas.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+
+            canvas.addEventListener('drop', function(e) {
+                e.preventDefault();
+                if (draggedNodeType) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    createWorkflowNode(draggedNodeType, x, y);
+                    hideWelcomeOverlay();
+                }
+            });
+        }
+
+        // 設置畫布事件
+        function setupCanvasEvents() {
+            const canvas = document.getElementById('canvas');
+            
+            canvas.addEventListener('click', function(e) {
+                if (e.target === canvas) {
+                    deselectAllNodes();
+                    closeConfigPanel();
+                }
+            });
+        }
+
+        // 創建工作流節點
+        function createWorkflowNode(type, x, y) {
+            const nodeId = `node-${++nodeCounter}`;
+            const nodeConfig = getNodeConfig(type);
+            
+            const nodeElement = document.createElement('div');
+            nodeElement.className = 'workflow-node';
+            nodeElement.style.left = x + 'px';
+            nodeElement.style.top = y + 'px';
+            nodeElement.dataset.nodeId = nodeId;
+            nodeElement.dataset.nodeType = type;
+            
+            nodeElement.innerHTML = `
+                <div class="node-header">
+                    <div class="node-type-icon" style="background: ${nodeConfig.color};">
+                        ${nodeConfig.icon}
+                    </div>
+                    <div class="node-title">${nodeConfig.title}</div>
+                </div>
+                <div class="node-body">
+                    <div class="node-setting">點擊配置節點</div>
+                </div>
+                <div class="connection-point input"></div>
+                <div class="connection-point output"></div>
+            `;
+            
+            // 添加事件監聽
+            nodeElement.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectNode(this);
+                showConfigPanel(type, nodeId);
+            });
+            
+            makeNodeDraggableEnhanced(nodeElement);
+            
+            document.getElementById('canvas').appendChild(nodeElement);
+            
+            // 添加到工作流
+            currentWorkflow.push({
+                id: nodeId,
+                type: type,
+                x: x,
+                y: y,
+                config: nodeConfig.defaultConfig
+            });
+        }
+
+        // 獲取節點配置
+        function getNodeConfig(type) {
+            const configs = {
+                'whatsapp-trigger': {
+                    title: 'WhatsApp 觸發器',
+                    icon: '💬',
+                    color: '#25d366',
+                    defaultConfig: {
+                        name: 'WhatsApp 觸發器',
+                        description: '接收 WhatsApp 消息觸發工作流'
+                    }
+                },
+                'ai-image': {
+                    title: '圖片分析',
+                    icon: '🖼️',
+                    color: '#f59e0b',
+                    defaultConfig: {
+                        name: '圖片分析',
+                        description: 'AI 識別圖片內容',
+                        model: 'claude-3-sonnet'
+                    }
+                },
+                'google-sheets': {
+                    title: 'Google Sheets',
+                    icon: '📊',
+                    color: '#16a34a',
+                    defaultConfig: {
+                        name: 'Google Sheets',
+                        description: '寫入 Google 表格',
+                        operation: 'append'
+                    }
+                },
+                'condition': {
+                    title: '條件判斷',
+                    icon: '🔀',
+                    color: '#f59e0b',
+                    defaultConfig: {
+                        name: '條件判斷',
+                        description: '根據條件分支執行',
+                        condition: ''
+                    }
+                }
+            };
+            
+            return configs[type] || {
+                title: '未知節點',
+                icon: '❓',
+                color: '#6b7280',
+                defaultConfig: {}
+            };
+        }
+
+        // 使節點可拖拽
+        function makeNodeDraggableEnhanced(nodeElement) {
+            let isDragging = false;
+            let dragOffset = { x: 0, y: 0 };
+            
+            nodeElement.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('connection-point')) return;
+                if (currentTool === 'connect') return;
+                
+                isDragging = true;
+                nodeElement.classList.add('dragging');
+                
+                const rect = nodeElement.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                
+                e.preventDefault();
+            });
+            
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const x = e.clientX - canvasRect.left - dragOffset.x;
+                const y = e.clientY - canvasRect.top - dragOffset.y;
+                
+                nodeElement.style.left = Math.max(0, x) + 'px';
+                nodeElement.style.top = Math.max(0, y) + 'px';
+                
+                // 重新渲染連接線
+                rerenderAllConnections();
+            }
+            
+            function onMouseUp() {
+                if (isDragging) {
+                    isDragging = false;
+                    nodeElement.classList.remove('dragging');
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    
+                    // 最終更新連接線
+                    rerenderAllConnections();
+                }
+            }
+        }
+
+        // 選擇節點
+        function selectNode(nodeElement) {
+            deselectAllNodes();
+            nodeElement.classList.add('selected');
+            selectedNode = nodeElement;
+        }
+
+        // 取消選擇所有節點
+        function deselectAllNodes() {
+            const nodes = document.querySelectorAll('.workflow-node');
+            nodes.forEach(node => node.classList.remove('selected'));
+            selectedNode = null;
+        }
+
+        // 顯示配置面板
+        function showConfigPanel(nodeType, nodeId) {
+            const panel = document.getElementById('configPanel');
+            const content = document.getElementById('configContent');
+            
+            // 根據節點類型生成配置表單
+            const configForm = generateConfigForm(nodeType, nodeId);
+            content.innerHTML = configForm;
+            
+            panel.classList.add('open');
+        }
+
+        // 關閉配置面板
+        function closeConfigPanel() {
+            document.getElementById('configPanel').classList.remove('open');
+        }
+
+        // 生成配置表單
+        function generateConfigForm(nodeType, nodeId) {
+            const forms = {
+                'whatsapp-trigger': `
+                    <div class="config-section">
+                        <div class="config-section-title">WhatsApp 設置</div>
+                        <div class="form-group">
+                            <label class="form-label">觸發條件</label>
+                            <select class="form-select">
+                                <option value="all">所有消息</option>
+                                <option value="image">僅圖片消息</option>
+                                <option value="text">僅文字消息</option>
+                                <option value="keyword">關鍵字觸發</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">關鍵字</label>
+                            <input type="text" class="form-input" placeholder="輸入觸發關鍵字">
+                        </div>
+                    </div>
+                `,
+                'ai-image': `
+                    <div class="config-section">
+                        <div class="config-section-title">AI 設置</div>
+                        <div class="form-group">
+                            <label class="form-label">AI 模型</label>
+                            <select class="form-select">
+                                <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                                <option value="claude-3-haiku">Claude 3 Haiku</option>
+                                <option value="gpt-4">GPT-4</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">提示詞</label>
+                            <textarea class="form-textarea" placeholder="輸入 AI 提示詞">請分析這張圖片，提取其中的文字和重要信息</textarea>
+                        </div>
+                    </div>
+                `,
+                'google-sheets': `
+                    <div class="config-section">
+                        <div class="config-section-title">Google Sheets 設置</div>
+                        <div class="form-group">
+                            <label class="form-label">表格 ID</label>
+                            <input type="text" class="form-input" placeholder="輸入 Google Sheets ID">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">工作表名稱</label>
+                            <input type="text" class="form-input" placeholder="輸入工作表名稱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">操作類型</label>
+                            <select class="form-select">
+                                <option value="append">追加數據</option>
+                                <option value="update">更新數據</option>
+                                <option value="read">讀取數據</option>
+                            </select>
+                        </div>
+                    </div>
+                `
+            };
+            
+            return forms[nodeType] || `
+                <div class="config-section">
+                    <div class="config-section-title">基本設置</div>
+                    <div class="form-group">
+                        <label class="form-label">節點名稱</label>
+                        <input type="text" class="form-input" placeholder="輸入節點名稱">
+                    </div>
+                </div>
+            `;
+        }
+
+        // 隱藏歡迎界面
+        function hideWelcomeOverlay() {
+            document.getElementById('welcomeOverlay').style.display = 'none';
+        }
+
+        // 創建快速工作流
+        function createQuickWorkflow(type) {
+            hideWelcomeOverlay();
+            
+            const templates = {
+                'expense': [
+                    { type: 'whatsapp-trigger', x: 100, y: 100 },
+                    { type: 'ai-image', x: 100, y: 250 },
+                    { type: 'google-sheets', x: 100, y: 400 }
+                ],
+                'customer': [
+                    { type: 'whatsapp-trigger', x: 100, y: 100 },
+                    { type: 'ai-text', x: 100, y: 250 },
+                    { type: 'condition', x: 100, y: 400 }
+                ],
+                'scheduler': [
+                    { type: 'schedule-trigger', x: 100, y: 100 },
+                    { type: 'ai-text', x: 100, y: 250 },
+                    { type: 'whatsapp-trigger', x: 100, y: 400 }
+                ]
+            };
+            
+            const template = templates[type] || [];
+            template.forEach(node => {
+                createWorkflowNode(node.type, node.x, node.y);
+            });
+        }
+
+        // 清空畫布
+        function clearCanvas() {
+            if (confirm('確定要清空畫布嗎？所有節點和連線將被刪除。')) {
+                const canvas = document.getElementById('canvas');
+                const nodes = canvas.querySelectorAll('.workflow-node');
+                nodes.forEach(node => node.remove());
+                
+                // 清除連線
+                const svg = document.getElementById('connectionsLayer');
+                svg.querySelectorAll('.connection-line').forEach(line => line.remove());
+                
+                currentWorkflow = [];
+                connections = [];
+                closeConfigPanel();
+                document.getElementById('welcomeOverlay').style.display = 'flex';
+                
+                // 取消任何進行中的連接
+                cancelConnection();
+            }
+        }
+
+        // 保存工作流
+        function saveWorkflow() {
+            const workflow = {
+                id: Date.now(),
+                name: 'My Workflow',
+                nodes: currentWorkflow,
+                createdAt: new Date().toISOString()
+            };
+            
+            console.log('保存工作流:', workflow);
+            alert('工作流已保存！');
+        }
+
+        // 運行工作流
+        function runWorkflow() {
+            if (currentWorkflow.length === 0) {
+                alert('請先添加節點到工作流中');
+                return;
+            }
+            
+            console.log('執行工作流:', currentWorkflow);
+            alert('工作流測試執行中...');
+        }
+
+        // 顯示模板
+        function showTemplates() {
+            alert('模板功能開發中...');
+        }
+
+        // 顯示幫助
+        function showHelp() {
+            alert('幫助功能開發中...');
+        }
+
+        // 檢查是否有現有工作流
+        function checkForExistingWorkflow() {
+            // 如果有現有工作流，隱藏歡迎界面
+            // 這裡可以從 API 載入工作流
+        }
+
+        // ============ 連線功能 ============
+
+        // 設置工具
+        function setTool(tool) {
+            currentTool = tool;
+            
+            // 更新工具按鈕狀態
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tool="${tool}"]`).classList.add('active');
+            
+            // 更新畫布游標
+            const canvas = document.getElementById('canvas');
+            canvas.style.cursor = tool === 'connect' ? 'crosshair' : 'default';
+            
+            // 更新工具欄信息
+            const toolInfo = {
+                'select': '點擊選擇節點，拖拽移動位置',
+                'connect': '點擊節點連接點創建連線'
+            };
+            document.getElementById('toolbarInfo').textContent = toolInfo[tool];
+        }
+
+        // 設置連接點事件
+        function setupConnectionPoints() {
+            document.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('connection-point')) return;
+                if (currentTool !== 'connect') return;
+                
+                e.stopPropagation();
+                handleConnectionPointClick(e.target);
+            });
+        }
+
+        // 處理連接點點擊
+        function handleConnectionPointClick(connectionPoint) {
+            const nodeElement = connectionPoint.closest('.workflow-node');
+            const nodeId = nodeElement.id;
+            const pointType = connectionPoint.classList.contains('input') ? 'input' : 'output';
+            
+            if (!isConnecting) {
+                // 開始連接 - 只能從output開始
+                if (pointType === 'output') {
+                    startConnection(nodeId, connectionPoint);
+                }
+            } else {
+                // 完成連接 - 只能連到input
+                if (pointType === 'input' && nodeId !== connectionStart.nodeId) {
+                    completeConnection(nodeId, connectionPoint);
+                } else {
+                    cancelConnection();
+                }
+            }
+        }
+
+        // 開始連接
+        function startConnection(nodeId, connectionPoint) {
+            isConnecting = true;
+            connectionStart = {
+                nodeId: nodeId,
+                point: connectionPoint,
+                type: 'output'
+            };
+            
+            // 視覺反饋
+            connectionPoint.classList.add('connecting');
+            document.getElementById('toolbarInfo').textContent = '選擇目標節點的輸入點...';
+            
+            // 設置臨時連線跟蹤
+            document.addEventListener('mousemove', onConnectionMouseMove);
+            document.addEventListener('click', onConnectionCancel);
+        }
+
+        // 完成連接
+        function completeConnection(targetNodeId, targetPoint) {
+            // 檢查是否已存在連接
+            const existingConnection = connections.find(conn => 
+                conn.from === connectionStart.nodeId && conn.to === targetNodeId
+            );
+            
+            if (existingConnection) {
+                alert('這兩個節點已經連接！');
+                cancelConnection();
+                return;
+            }
+            
+            // 創建連接
+            const connection = {
+                id: 'conn_' + Date.now(),
+                from: connectionStart.nodeId,
+                to: targetNodeId,
+                fromPoint: connectionStart.point,
+                toPoint: targetPoint
+            };
+            
+            connections.push(connection);
+            renderConnection(connection);
+            
+            // 清理狀態
+            cancelConnection();
+            document.getElementById('toolbarInfo').textContent = '連接創建成功！';
+            
+            setTimeout(() => {
+                if (currentTool === 'connect') {
+                    document.getElementById('toolbarInfo').textContent = '點擊節點連接點創建連線';
+                }
+            }, 2000);
+        }
+
+        // 取消連接
+        function cancelConnection() {
+            isConnecting = false;
+            
+            if (connectionStart) {
+                connectionStart.point.classList.remove('connecting');
+                connectionStart = null;
+            }
+            
+            // 移除臨時連線
+            if (tempConnection) {
+                tempConnection.remove();
+                tempConnection = null;
+            }
+            
+            document.removeEventListener('mousemove', onConnectionMouseMove);
+            document.removeEventListener('click', onConnectionCancel);
+        }
+
+        // 連接時滑鼠移動
+        function onConnectionMouseMove(e) {
+            if (!isConnecting || !connectionStart) return;
+            
+            const canvas = document.getElementById('canvas');
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            const startRect = connectionStart.point.getBoundingClientRect();
+            const startX = startRect.left + startRect.width / 2 - canvasRect.left;
+            const startY = startRect.top + startRect.height / 2 - canvasRect.top;
+            
+            const endX = e.clientX - canvasRect.left;
+            const endY = e.clientY - canvasRect.top;
+            
+            renderTempConnection(startX, startY, endX, endY);
+        }
+
+        // 取消連接點擊處理
+        function onConnectionCancel(e) {
+            if (e.target.classList.contains('connection-point')) return;
+            cancelConnection();
+        }
+
+        // 渲染臨時連線
+        function renderTempConnection(x1, y1, x2, y2) {
+            const svg = document.getElementById('connectionsLayer');
+            
+            // 移除之前的臨時連線
+            if (tempConnection) {
+                tempConnection.remove();
+            }
+            
+            // 創建貝塞爾曲線路徑
+            const controlOffset = Math.abs(x2 - x1) * 0.5;
+            const path = `M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}`;
+            
+            tempConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            tempConnection.setAttribute('d', path);
+            tempConnection.setAttribute('class', 'connection-line temp');
+            
+            svg.appendChild(tempConnection);
+        }
+
+        // 渲染連接
+        function renderConnection(connection) {
+            const fromPoint = connection.fromPoint;
+            const toPoint = connection.toPoint;
+            
+            const fromRect = fromPoint.getBoundingClientRect();
+            const toRect = toPoint.getBoundingClientRect();
+            const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+            
+            const x1 = fromRect.left + fromRect.width / 2 - canvasRect.left;
+            const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+            const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
+            const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
+            
+            // 創建貝塞爾曲線
+            const controlOffset = Math.abs(x2 - x1) * 0.5;
+            const path = `M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}`;
+            
+            const svg = document.getElementById('connectionsLayer');
+            const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            pathElement.setAttribute('d', path);
+            pathElement.setAttribute('class', 'connection-line');
+            pathElement.setAttribute('data-connection-id', connection.id);
+            
+            // 添加點擊事件用於刪除連接
+            pathElement.addEventListener('click', function() {
+                if (confirm('確定要刪除這個連接嗎？')) {
+                    deleteConnection(connection.id);
+                }
+            });
+            
+            svg.appendChild(pathElement);
+        }
+
+        // 刪除連接
+        function deleteConnection(connectionId) {
+            // 從數組中移除
+            connections = connections.filter(conn => conn.id !== connectionId);
+            
+            // 從SVG中移除
+            const pathElement = document.querySelector(`[data-connection-id="${connectionId}"]`);
+            if (pathElement) {
+                pathElement.remove();
+            }
+        }
+
+        // 重新渲染所有連接（節點移動時使用）
+        function rerenderAllConnections() {
+            const svg = document.getElementById('connectionsLayer');
+            
+            // 清除所有連接線
+            svg.querySelectorAll('.connection-line:not(.temp)').forEach(line => line.remove());
+            
+            // 重新渲染所有連接
+            connections.forEach(connection => {
+                renderConnection(connection);
+            });
+        }
+
+        // ============ 縮放功能 ============
+
+        function zoomIn() {
+            canvasZoom = Math.min(canvasZoom * 1.2, 3);
+            applyCanvasTransform();
+        }
+
+        function zoomOut() {
+            canvasZoom = Math.max(canvasZoom / 1.2, 0.3);
+            applyCanvasTransform();
+        }
+
+        function resetZoom() {
+            canvasZoom = 1;
+            canvasOffset = { x: 0, y: 0 };
+            applyCanvasTransform();
+        }
+
+        function applyCanvasTransform() {
+            const canvas = document.getElementById('canvas');
+            canvas.style.transform = `scale(${canvasZoom}) translate(${canvasOffset.x}px, ${canvasOffset.y}px)`;
+            
+            // 更新工具欄信息
+            document.getElementById('toolbarInfo').textContent = `縮放: ${Math.round(canvasZoom * 100)}%`;
+        }
+
+        // ============ 增強的節點創建 ============
+
+        // 更新 makeNodeDraggable 函數以支持連線重繪
+        function makeNodeDraggableEnhanced(nodeElement) {
+            let isDragging = false;
+            let dragOffset = { x: 0, y: 0 };
+            
+            nodeElement.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('connection-point')) return;
+                if (currentTool === 'connect') return;
+                
+                isDragging = true;
+                nodeElement.classList.add('dragging');
+                
+                const rect = nodeElement.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                
+                e.preventDefault();
+            });
+            
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                
+                const canvas = document.getElementById('canvas');
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const x = e.clientX - canvasRect.left - dragOffset.x;
+                const y = e.clientY - canvasRect.top - dragOffset.y;
+                
+                nodeElement.style.left = Math.max(0, x) + 'px';
+                nodeElement.style.top = Math.max(0, y) + 'px';
+                
+                // 重新渲染連接線
+                rerenderAllConnections();
+            }
+            
+            function onMouseUp() {
+                if (isDragging) {
+                    isDragging = false;
+                    nodeElement.classList.remove('dragging');
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    
+                    // 最終更新連接線
+                    rerenderAllConnections();
+                }
+            }
+        }
+
+        // ============ 初始化增強功能 ============
+
+        // 更新頁面載入完成事件
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDragAndDrop();
+            setupCanvasEvents();
+            setupConnectionPoints(); // 新增
+            checkForExistingWorkflow();
+            
+            // 設置默認工具
+            setTool('select');
+        });
+    </script>
+</body>
+</html> 
