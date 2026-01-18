@@ -1,0 +1,146 @@
+{
+  "database": {
+    "success": true,
+    "health": {
+      "status": "healthy",
+      "service": "Workflow Bot System",
+      "version": "1.0.0",
+      "timestamp": "2025-07-10T18:00:36.821Z",
+      "details": {
+        "status": "healthy",
+        "container": "WorkflowServiceContainer",
+        "timestamp": "2025-07-10T18:00:36.820Z",
+        "services": {
+          "workflowEngine": {
+            "status": "healthy",
+            "service": "WorkflowEngine",
+            "workflowsCount": 0,
+            "executionsCount": 0,
+            "isInitialized": false,
+            "timestamp": "2025-07-10T18:00:36.820Z"
+          },
+          "botManager": {
+            "status": "healthy",
+            "service": "BotManagerService",
+            "botsCount": 5,
+            "activeBotsCount": 0,
+            "isInitialized": false,
+            "timestamp": "2025-07-10T18:00:36.820Z"
+          },
+          "workflowDesigner": {
+            "status": "healthy",
+            "service": "WorkflowDesignerService",
+            "templatesCount": 0,
+            "isInitialized": false,
+            "timestamp": "2025-07-10T18:00:36.820Z"
+          }
+        },
+        "adapters": {
+          "databaseService": {
+            "status": "healthy",
+            "service": "Database",
+            "timestamp": "2025-07-10T18:00:36.821Z",
+            "details": {
+              "isInitialized": true,
+              "test": "passed"
+            }
+          },
+          "websocketService": {
+            "status": "healthy",
+            "service": "websocketService",
+            "adapter": true,
+            "timestamp": "2025-07-10T18:00:36.821Z"
+          },
+          "LoggingService": {
+            "status": "healthy",
+            "service": "LoggingService",
+            "adapter": true,
+            "timestamp": "2025-07-10T18:00:36.821Z"
+          },
+          "AIServiceV2": {
+            "status": "healthy",
+            "service": "AIServiceV2",
+            "adapter": true,
+            "timestamp": "2025-07-10T18:00:36.821Z"
+          },
+          "UserServiceV2": {
+            "status": "healthy",
+            "service": "UserServiceV2",
+            "adapter": true,
+            "timestamp": "2025-07-10T18:00:36.821Z"
+          },
+          "WhatsAppServiceV2": {
+            "status": "healthy",
+            "service": "WhatsAppServiceV2",
+            "adapter": true,
+            "timestamp": "2025-07-10T18:00:36.821Z"
+          }
+        }
+      }
+    }
+  },
+  "listAPI": {
+    "success": true,
+    "count": 1,
+    "bots": [
+      {
+        "id": 2,
+        "name": "測試WhatsApp機械人",
+        "type": "whatsapp",
+        "config": {
+          "token": "test-token",
+          "webhook": "test-webhook"
+        },
+        "user_id": "test-user",
+        "tenant_id": "test-tenant",
+        "status": "active",
+        "created_at": "2025-07-10 15:02:16",
+        "updated_at": "2025-07-10 15:02:16"
+      }
+    ]
+  },
+  "createAPI": {
+    "success": true,
+    "bot": {
+      "id": 11,
+      "name": "APIFixTestBot_1752170436852",
+      "type": "whatsapp",
+      "config": {
+        "purpose": "API testing",
+        "aiLevel": "basic",
+        "personality": "friendly"
+      },
+      "user_id": "test-user",
+      "tenant_id": "test-tenant",
+      "status": "inactive"
+    }
+  },
+  "listUpdate": {
+    "success": true,
+    "newBot": {
+      "id": 12,
+      "name": "APIFixTestBot_1752170436885",
+      "type": "whatsapp",
+      "config": {
+        "autoStart": false,
+        "defaultWorkflow": "",
+        "aiModel": "claude-3-sonnet",
+        "systemPrompt": "你是一個專業的智能助手，幫助用戶處理各種任務。請保持友善、高效，並提供準確的信息。",
+        "whitelistMode": false,
+        "logConversations": true,
+        "authorizedUsers": "",
+        "maxConcurrentChats": 10,
+        "responseDelay": 1,
+        "timeout": 30,
+        "purpose": "API testing",
+        "aiLevel": "basic",
+        "personality": "friendly"
+      },
+      "user_id": "test-user",
+      "tenant_id": "test-tenant",
+      "status": "active",
+      "created_at": "2025-07-10 18:00:36",
+      "updated_at": "2025-07-10 18:00:36"
+    }
+  }
+}

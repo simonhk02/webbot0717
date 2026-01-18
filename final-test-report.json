@@ -1,0 +1,144 @@
+{
+  "summary": {
+    "total": 18,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 1,
+    "successRate": "94.4",
+    "duration": 766,
+    "timestamp": "2025-07-10T18:02:05.888Z",
+    "systemStatus": "GOOD"
+  },
+  "details": [
+    {
+      "test": "工作流系統健康檢查",
+      "status": "PASS",
+      "message": "系統健康，狀態: healthy，版本: 1.0.0",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:05.968Z"
+    },
+    {
+      "test": "系統響應時間",
+      "status": "PASS",
+      "message": "響應時間4ms，性能優秀",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:05.975Z"
+    },
+    {
+      "test": "健康檢查端點",
+      "status": "PASS",
+      "message": "正常返回狀態碼200",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:05.986Z"
+    },
+    {
+      "test": "主頁面端點",
+      "status": "PASS",
+      "message": "正常返回狀態碼301",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:05.990Z"
+    },
+    {
+      "test": "工作流列表API",
+      "status": "PASS",
+      "message": "正常返回狀態碼200",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:05.995Z"
+    },
+    {
+      "test": "機械人列表API",
+      "status": "PASS",
+      "message": "正常返回狀態碼200",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.005Z"
+    },
+    {
+      "test": "機械人列表API",
+      "status": "PASS",
+      "message": "成功獲取機械人列表，共3個機械人",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.015Z"
+    },
+    {
+      "test": "機械人創建API",
+      "status": "PASS",
+      "message": "成功創建機械人: FinalTestBot_1752170526016，ID: 13",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.029Z"
+    },
+    {
+      "test": "機械人列表更新",
+      "status": "PASS",
+      "message": "新創建的機械人成功出現在列表中",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.544Z"
+    },
+    {
+      "test": "主頁面HTML",
+      "status": "PASS",
+      "message": "文件存在，大小37953字節，包含N8N風格元素",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.549Z"
+    },
+    {
+      "test": "機械人頁面HTML",
+      "status": "PASS",
+      "message": "文件存在，大小29756字節",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.551Z"
+    },
+    {
+      "test": "前端頁面訪問",
+      "status": "PASS",
+      "message": "頁面重定向正常",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.554Z"
+    },
+    {
+      "test": "數據庫文件檢查",
+      "status": "PASS",
+      "message": "文件存在，大小53248字節",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.555Z"
+    },
+    {
+      "test": "數據庫連接測試",
+      "status": "PASS",
+      "message": "數據庫查詢正常",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.567Z"
+    },
+    {
+      "test": "併發請求測試",
+      "status": "PASS",
+      "message": "10個併發請求全部成功，總時間61ms",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.635Z"
+    },
+    {
+      "test": "工作流系統運行狀態",
+      "status": "PASS",
+      "message": "工作流系統在端口3001正常運行",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.642Z"
+    },
+    {
+      "test": "主系統運行狀態",
+      "status": "SKIP",
+      "message": "主系統未運行，這是正常的按需啟動設計",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.650Z"
+    },
+    {
+      "test": "系統隔離檢查",
+      "status": "PASS",
+      "message": "雙軌並行架構設計正確，系統完全隔離",
+      "details": null,
+      "timestamp": "2025-07-10T18:02:06.651Z"
+    }
+  ],
+  "recommendations": [
+    "系統運行良好，可以進入下一階段開發",
+    "所有核心功能正常，系統已準備好進入階段3"
+  ]
+}

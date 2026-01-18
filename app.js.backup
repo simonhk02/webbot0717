@@ -1,0 +1,367 @@
+const express = require('express');
+const app = express();
+const db = require('./database');
+const session = require('express-session');
+const { logger, businessLogger } = require('./utils/logger');
+const path = require('path');
+const pluginLoader = require('./services/pluginLoader');
+const pluginMiddleware = require('./middleware/pluginMiddleware');
+const aiRoutes = require('./routes/aiRoutes');
+const { getRedisInstance } = require('./services/redisService');
+
+// 引入新的配置系統和工具函數
+const config = require('./config');
+
+// 引入狀態管理器和事件系統
+const stateManager = require('./core/StateManager');
+const eventBus = require('./core/EventBus');
+const { EventTypes, EventPriority, EventSource } = require('./core/EventTypes');
+
+// 引入新的服務
+const whatsAppService = require('./services/WhatsAppService');
+const imageProcessingService = require('./services/ImageProcessingService');
+const expenseChatService = require('./services/ExpenseChatService');
+const queueService = require('./services/QueueService');
+
+// 引入服務容器和控制器
+const ServiceContainer = require('./core/ServiceContainer');
+const UserController = require('./controllers/UserController');
+const UserService = require('./services/userService');
+const DatabaseService = require('./services/databaseService');
+const AIService = require('./services/aiService');
+
+// 建立服務容器
+const container = new ServiceContainer();
+
+// 創建服務實例
+const userServiceInstance = new UserService();
+const databaseServiceInstance = new DatabaseService();
+const aiServiceInstance = new AIService();
+
+// 註冊服務到容器
+container.register('logger', businessLogger);
+container.register('userService', userServiceInstance);
+container.register('userController', new UserController(container));
+container.register('databaseService', databaseServiceInstance);
+container.register('aiService', aiServiceInstance);
+container.register('stateManager', stateManager);
+container.register('eventBus', eventBus);
+container.register('whatsAppService', whatsAppService);
+container.register('imageProcessingService', imageProcessingService);
+container.register('expenseChatService', expenseChatService);
+container.register('queueService', queueService);
+
+process.setMaxListeners(config.app.maxListeners);
+
+// 使用統一的 Redis 服務
+const redis = getRedisInstance();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+// 設置靜態路由
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
+});
+
+// 上傳頁面路由
+app.get('/upload', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: '上傳功能可用',
+    endpoints: {
+      'plugin_upload': '/api/plugins',
+      'file_upload': '/api/upload'
+    }
+  });
+});
+
+app.use(session({
+  secret: config.server.sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: config.app.sessionTimeout }
+}));
+
+// 正確傳遞容器給路由
+const userRoutes = require('./routes/userRoutes');
+app.use('/api', userRoutes(container));
+
+// 添加 WhatsApp 路由
+const whatsappRoutes = require('./routes/whatsappRoutes');
+app.use('/api/whatsapp', whatsappRoutes(container));
+
+// 添加健康檢查路由
+app.use('/api/health', require('./routes/healthRoutes')(container));
+
+// 初始化插件系統
+async function initializePluginSystem() {
+    try {
+        await pluginLoader.initialize();
+        await pluginLoader.watchPlugins();
+        businessLogger.info('插件系統初始化完成');
+    } catch (error) {
+        businessLogger.error(`插件系統初始化失敗: ${error.message}`);
+    }
+}
+
+// 添加插件中間件
+app.use('/api/plugins', pluginMiddleware());
+
+// 添加插件路由
+app.use('/api/plugins', require('./routes/pluginRoutes')(container));
+
+app.use('/api/ai', aiRoutes(container));
+
+// 初始化 WhatsApp 服務
+async function initializeWhatsAppService() {
+    try {
+        await whatsAppService.initialize();
+        businessLogger.info('WhatsApp 服務初始化完成');
+    } catch (error) {
+        businessLogger.error(`WhatsApp 服務初始化失敗: ${error.message}`);
+    }
+}
+
+// 設置圖片處理佇列處理器
+async function setupImageQueueProcessor() {
+    try {
+        await queueService.processJob('image-processing', async (job) => {
+  const { chatId, media, defaultDate, userId, msgId } = job.data;
+            const clientData = whatsAppService.getClient(userId);
+            
+  if (!clientData || !clientData.ready || !clientData.client.ws.isOpen) {
+    businessLogger.error(`用戶 ${userId} 無有效客戶端資料或連線已關閉`);
+    stateManager.deleteExpenseState(chatId, msgId);
+    stateManager.markImageProcessed(msgId);
+    stateManager.setImageProcessingStatus(false);
+                imageProcessingService.processImageQueue();
+    return;
+  }
+
+  try {
+    if (!media || !media.data) {
+      throw new Error('圖片數據無效');
+    }
+    // 使用事件驅動處理圖片
+    await eventBus.emit(EventTypes.IMAGE.PROCESSING, {
+      chatId,
+      media,
+      defaultDate,
+      client: clientData.client,
+      driveFolderId: clientData.driveFolderId,
+      msgId,
+      userId
+    }, { source: EventSource.IMAGE_PROCESSING });
+  } catch (err) {
+    businessLogger.error(`圖片處理失敗：${err.message}`);
+    if (clientData.ready && clientData.client.ws.isOpen) {
+      try {
+                        const { createErrorMessage } = require('./utils/messageUtils');
+        await clientData.client.sendMessage(chatId, { text: createErrorMessage('圖片處理', err.message) });
+      } catch (sendErr) {
+        businessLogger.warn(`發送圖片處理失敗訊息時出錯：${sendErr.message}`);
+      }
+    }
+    stateManager.deleteExpenseState(chatId, msgId);
+    stateManager.markImageProcessed(msgId);
+    stateManager.setImageProcessingStatus(false);
+                imageProcessingService.processImageQueue();
+            }
+        });
+        businessLogger.info('圖片處理佇列處理器設置完成');
+    } catch (error) {
+        businessLogger.error(`設置圖片處理佇列處理器失敗: ${error.message}`);
+    }
+}
+
+async function startServer() {
+    try {
+        // 初始化插件系統
+        await initializePluginSystem();
+        
+        // 初始化 WhatsApp 服務
+        await initializeWhatsAppService();
+        
+        // 設置圖片處理佇列處理器
+        await setupImageQueueProcessor();
+        
+        // 初始化事件處理器（在服務初始化之後）
+        const eventHandlers = require('./core/EventHandlers');
+        businessLogger.info('事件處理器已初始化');
+        
+        // 啟動伺服器
+        const port = config.server.port;
+        app.listen(port, () => {
+            businessLogger.info(`伺服器已啟動，監聽端口 ${port}`);
+            businessLogger.info(`健康檢查端點: http://localhost:${port}/api/health`);
+        });
+
+        // 定期檢查資料庫結構
+        const checkAndAddColumns = () => {
+            db.run(`
+                ALTER TABLE users ADD COLUMN email TEXT UNIQUE
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 email 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN password TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 password 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN isAuthenticated INTEGER DEFAULT 0
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 isAuthenticated 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN driveFolderId TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 driveFolderId 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN sheetId TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 sheetId 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN sheetName TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 sheetName 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN companyName TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 companyName 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN companyAddress TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 companyAddress 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN companyPhone TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 companyPhone 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN invoiceTitle TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 invoiceTitle 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN invoiceNumberPrefix TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 invoiceNumberPrefix 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN invoiceFooter TEXT
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 invoiceFooter 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN enablePdf INTEGER DEFAULT 0
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 enablePdf 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN pdfStyle TEXT DEFAULT 'default'
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 pdfStyle 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN enableAI INTEGER DEFAULT 0
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 enableAI 欄位失敗: ${err.message}`);
+                }
+            });
+
+            db.run(`
+                ALTER TABLE users ADD COLUMN aiConfidenceThreshold REAL DEFAULT 0.7
+            `, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    businessLogger.error(`添加 aiConfidenceThreshold 欄位失敗: ${err.message}`);
+                }
+            });
+        };
+
+        // 立即執行一次
+        checkAndAddColumns();
+
+        // 每小時檢查一次
+        setInterval(checkAndAddColumns, 60 * 60 * 1000);
+
+        // 優雅關閉處理
+        process.on('SIGINT', async () => {
+            businessLogger.info('收到 SIGINT 信號，開始優雅關閉...');
+            
+            try {
+                // 清理 WhatsApp 服務
+                await whatsAppService.cleanup();
+                
+                // 清理佇列服務
+                await queueService.cleanup();
+                
+                // 清理圖片處理服務
+                await imageProcessingService.cleanup();
+                
+                businessLogger.info('所有服務已清理，程式即將退出');
+                process.exit(0);
+            } catch (err) {
+                businessLogger.error(`優雅關閉失敗: ${err.message}`);
+                process.exit(1);
+            }
+        });
+
+    } catch (error) {
+        businessLogger.error(`啟動伺服器失敗: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// 啟動伺服器
+startServer();
