@@ -1,0 +1,27 @@
+{
+  "total": 4,
+  "resolved": 3,
+  "unresolved": 1,
+  "fixes": [
+    {
+      "issue": "系統健康檢查",
+      "status": "HEALTHY",
+      "solution": "系統運行正常"
+    },
+    {
+      "issue": "數據庫連接",
+      "status": "HEALTHY",
+      "solution": "數據庫連接正常"
+    },
+    {
+      "issue": "路由重定向",
+      "status": "RESOLVED",
+      "solution": "重定向目標正常工作"
+    },
+    {
+      "issue": "機械人列表更新",
+      "status": "UNRESOLVED",
+      "solution": "需要檢查數據庫事務處理"
+    }
+  ]
+}

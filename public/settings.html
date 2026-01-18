@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WhatsApp 機械人設置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* 優化的樣式系統 */
+    :root {
+      --primary-color: #10b981;
+      --primary-dark: #059669;
+      --secondary-color: #3b82f6;
+      --danger-color: #ef4444;
+      --warning-color: #f59e0b;
+      --success-color: #10b981;
+      --bg-dark: #111827;
+      --bg-card: #1f2937;
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --border-color: #374151;
+    }
+
+    /* 動畫和互動效果 */
+    .animate-pulse-soft {
+      animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .animate-bounce-in {
+      animation: bounce-in 0.5s ease-out;
+    }
+    
+    @keyframes bounce-in {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .animate-slide-in {
+      animation: slide-in 0.3s ease-out;
+    }
+    
+    @keyframes slide-in {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* 進度條樣式 */
+    .progress-bar {
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+      background-size: 200% 100%;
+      animation: progress-shimmer 2s linear infinite;
+    }
+    
+    @keyframes progress-shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* 狀態指示器 */
+    .status-indicator {
+      position: relative;
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-indicator.online {
+      background-color: var(--success-color);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+    
+    .status-indicator.offline {
+      background-color: var(--danger-color);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+    
+    .status-indicator.connecting {
+      background-color: var(--warning-color);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* 增強的按鈕樣式 */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .btn-primary.loading::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: loading-shimmer 1.5s infinite;
+    }
+    
+    @keyframes loading-shimmer {
+      100% { left: 100%; }
+    }
+
+    /* 增強的卡片效果 */
+    .card-enhanced {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .card-enhanced:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+    }
+
+    /* 通知樣式 */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      max-width: 400px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    /* 極致移動端優化 */
+    @media (max-width: 640px) {
+      .mobile-padding { padding: 1rem; }
+      .mobile-text { font-size: 0.875rem; }
+      .mobile-input { font-size: 16px; }
+      .mobile-button { padding: 0.75rem 1rem; width: 100%; margin-bottom: 0.5rem; }
+      .mobile-container { margin: 0; border-radius: 0; }
+      .mobile-header { padding: 0.75rem; }
+      .mobile-section { padding: 1rem; }
+      
+      .notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+      
+      .notification.show {
+        transform: translateX(0);
+      }
+      
+      /* 手機專用快捷操作區 */
+      .mobile-quick-actions {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999;
+      }
+      
+      .quick-action-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+      }
+      
+      .quick-action-btn:active {
+        transform: scale(0.95);
+      }
+      
+      /* 手勢支持 */
+      .swipe-container {
+        touch-action: pan-y;
+        overflow-x: hidden;
+      }
+      
+      /* 大拇指友好的按鈕 */
+      .thumb-friendly {
+        min-height: 48px;
+        min-width: 48px;
+      }
+      
+      /* 一鍵模板 */
+      .template-card {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .template-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+      }
+      
+      .template-card:hover::before {
+        left: 100%;
+      }
+      
+      .template-card:active {
+        transform: scale(0.98);
+      }
+    }
+
+    /* 觸摸反饋 */
+    .touch-feedback {
+      -webkit-tap-highlight-color: rgba(16, 185, 129, 0.3);
+      user-select: none;
+    }
+    
+    /* 震動反饋樣式 */
+    .vibrate-on-touch:active {
+      animation: vibrate 0.1s;
+    }
+    
+    @keyframes vibrate {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-1px); }
+      75% { transform: translateX(1px); }
+    }
+    
+    /* 滑入動畫 */
+    .animate-slide-up {
+      animation: slide-up 0.3s ease-out;
+    }
+    
+    @keyframes slide-up {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* 自定義滾動條 */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-color);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 min-h-screen text-gray-100">
+  <!-- 通知系統 -->
+  <div id="notification" class="notification">
+    <div class="bg-white rounded-lg shadow-lg p-4 border-l-4" id="notificationContent">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <i id="notificationIcon" class="fas fa-info-circle text-blue-500"></i>
+        </div>
+        <div class="ml-3">
+          <p id="notificationMessage" class="text-sm font-medium text-gray-900"></p>
+        </div>
+        <button id="notificationClose" class="ml-auto flex-shrink-0 text-gray-400 hover:text-gray-600 thumb-friendly touch-feedback">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 移動端快捷操作區 -->
+  <div id="mobileQuickActions" class="mobile-quick-actions block sm:hidden">
+    <button id="quickSave" class="quick-action-btn bg-green-500 text-white flex items-center justify-center touch-feedback vibrate-on-touch" title="快速保存">
+      <i class="fas fa-save text-lg"></i>
+    </button>
+    <button id="quickTest" class="quick-action-btn bg-blue-500 text-white flex items-center justify-center touch-feedback vibrate-on-touch" title="測試連接">
+      <i class="fas fa-plug text-lg"></i>
+    </button>
+    <button id="quickTemplate" class="quick-action-btn bg-purple-500 text-white flex items-center justify-center touch-feedback vibrate-on-touch" title="快速模板">
+      <i class="fas fa-magic text-lg"></i>
+    </button>
+  </div>
+
+  <!-- 快速模板選擇器 -->
+  <div id="templateModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-end justify-center min-h-screen p-4">
+      <div class="bg-white rounded-t-3xl w-full max-w-md animate-slide-up">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">選擇快速模板</h3>
+            <button id="closeTemplateModal" class="text-gray-400 hover:text-gray-600 thumb-friendly">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          
+          <div class="space-y-3" id="templateList">
+            <!-- 模板將由 JavaScript 動態生成 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主容器 -->
+  <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="card-enhanced rounded-2xl shadow-2xl overflow-hidden mobile-container">
+      <!-- 增強的頂部導航欄 -->
+      <div class="px-6 py-4 mobile-header bg-gradient-to-r from-gray-800 to-gray-700">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <i class="fas fa-robot text-2xl sm:text-3xl text-green-400"></i>
+              <div id="connectionStatus" class="status-indicator connecting absolute -top-1 -right-1"></div>
+            </div>
+            <div>
+              <h1 class="text-xl sm:text-2xl font-bold text-white">WhatsApp 機械人控制台</h1>
+              <p id="statusText" class="text-sm text-gray-400">正在連接...</p>
+            </div>
+          </div>
+          <button id="logout" class="btn-primary px-3 sm:px-4 py-2 rounded-lg text-white transition-all mobile-button">
+            <i class="fas fa-sign-out-alt mr-2"></i>
+            <span class="hidden sm:inline">登出</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 進度條 -->
+      <div id="progressBar" class="hidden">
+        <div class="progress-bar h-1"></div>
+      </div>
+
+      <!-- 錯誤提示 (保留原有功能，但樣式優化) -->
+      <div id="error" class="hidden px-4 sm:px-6 py-3 bg-red-500/20 text-red-300 mobile-text animate-slide-in"></div>
+
+      <!-- 增強的 QR 碼部分 -->
+      <div id="qrSection" class="p-4 sm:p-6 border-b border-gray-700 mobile-section">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-200 mb-4 flex items-center">
+          <i class="fas fa-qrcode mr-2 text-green-400"></i>綁定 WhatsApp
+          <span id="qrStatus" class="ml-2 text-sm text-gray-400"></span>
+        </h2>
+        
+        <div id="qrContainer" class="hidden text-center">
+          <div class="animate-bounce-in">
+            <p class="text-gray-400 mb-4 mobile-text">請使用 WhatsApp 掃描以下 QR 碼以綁定你的帳號</p>
+            <div class="inline-block p-4 rounded-xl bg-white">
+              <img id="qrCode" src="" alt="QR Code" class="w-48 h-48 sm:w-64 sm:h-64">
+            </div>
+            <div class="mt-4 flex items-center justify-center space-x-4">
+              <button id="refreshQR" class="px-4 py-2 text-sm text-green-400 hover:text-green-300 transition-colors">
+                <i class="fas fa-refresh mr-2"></i>重新生成
+              </button>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-clock mr-1"></i>
+                <span id="qrTimer">等待掃描...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="loadingContainer" class="text-center">
+          <div class="inline-block rounded-full h-10 w-10 sm:h-12 sm:w-12 border-4 border-green-400 border-t-transparent animate-spin"></div>
+          <p class="mt-4 text-gray-400 mobile-text animate-pulse-soft">正在初始化 WhatsApp 客戶端，請稍候...</p>
+          <div class="mt-2 text-xs text-gray-500">
+            <span id="loadingStatus">連接中...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 增強的設置部分 -->
+      <div class="p-4 sm:p-6 mobile-section">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-200 flex items-center">
+            <i class="fas fa-cogs mr-2 text-green-400"></i>系統設置
+          </h2>
+          <div class="flex items-center space-x-2">
+            <div id="saveStatus" class="text-sm text-gray-500 hidden">
+              <i class="fas fa-save mr-1"></i>已儲存
+            </div>
+            <button id="testConnection" class="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-md text-white transition-colors">
+              <i class="fas fa-plug mr-1"></i>測試連接
+            </button>
+          </div>
+        </div>
+        
+        <!-- 增強的分頁導航 -->
+        <div class="mb-6 border-b border-gray-700">
+          <nav class="flex space-x-4" aria-label="Tabs">
+            <button id="generalTab" class="tab-button px-4 py-2 text-sm font-medium text-green-400 border-b-2 border-green-400 transition-all">
+              <i class="fas fa-sliders-h mr-2"></i>一般設定
+            </button>
+            <button id="analyticsTab" class="tab-button px-4 py-2 text-sm font-medium text-gray-400 border-b-2 border-transparent transition-all">
+              <i class="fas fa-chart-bar mr-2"></i>AI智能儀表板
+            </button>
+            <button id="pdfTemplateTab" class="tab-button px-4 py-2 text-sm font-medium text-gray-400 border-b-2 border-transparent transition-all">
+              <i class="fas fa-file-pdf mr-2"></i>PDF 發票模版
+            </button>
+            <button id="advancedTab" class="tab-button px-4 py-2 text-sm font-medium text-gray-400 border-b-2 border-transparent transition-all">
+              <i class="fas fa-tools mr-2"></i>進階設定
+            </button>
+          </nav>
+        </div>
+        <!-- 一般設定分頁 -->
+        <div id="generalSettings" class="space-y-6">
+          <!-- 連接狀態卡片 -->
+          <div class="card-enhanced p-4 rounded-xl">
+            <h3 class="text-md font-medium text-gray-300 mb-4 flex items-center">
+              <i class="fas fa-wifi mr-2 text-green-400"></i>連接狀態
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="text-center p-3 bg-gray-800/30 rounded-lg">
+                <div id="whatsappStatus" class="status-indicator connecting mx-auto mb-2"></div>
+                <p class="text-xs text-gray-400">WhatsApp</p>
+                <p id="whatsappStatusText" class="text-sm font-medium">連接中</p>
+              </div>
+              <div class="text-center p-3 bg-gray-800/30 rounded-lg">
+                <div id="googleStatus" class="status-indicator connecting mx-auto mb-2"></div>
+                <p class="text-xs text-gray-400">Google 服務</p>
+                <p id="googleStatusText" class="text-sm font-medium">檢查中</p>
+              </div>
+              <div class="text-center p-3 bg-gray-800/30 rounded-lg">
+                <div id="aiStatus" class="status-indicator connecting mx-auto mb-2"></div>
+                <p class="text-xs text-gray-400">AI 服務</p>
+                <p id="aiStatusText" class="text-sm font-medium">檢查中</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 智能快速設定模板 -->
+          <div class="card-enhanced p-4 rounded-xl mb-6">
+            <h3 class="text-md font-medium text-gray-300 mb-4 flex items-center">
+              <i class="fas fa-magic mr-2 text-purple-400"></i>一鍵快速設定
+              <span class="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded-full">新功能</span>
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="template-card touch-feedback" data-template="personal">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-semibold">個人記帳</h4>
+                    <p class="text-sm opacity-90">適合個人日常開支記錄</p>
+                  </div>
+                  <i class="fas fa-user text-2xl opacity-75"></i>
+                </div>
+              </div>
+              <div class="template-card touch-feedback" data-template="business">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-semibold">商業報銷</h4>
+                    <p class="text-sm opacity-90">企業員工報銷管理</p>
+                  </div>
+                  <i class="fas fa-building text-2xl opacity-75"></i>
+                </div>
+              </div>
+              <div class="template-card touch-feedback" data-template="family">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-semibold">家庭共用</h4>
+                    <p class="text-sm opacity-90">家庭成員共同記帳</p>
+                  </div>
+                  <i class="fas fa-home text-2xl opacity-75"></i>
+                </div>
+              </div>
+              <div class="template-card touch-feedback" data-template="travel">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-semibold">旅遊記帳</h4>
+                    <p class="text-sm opacity-90">旅行開支追蹤</p>
+                  </div>
+                  <i class="fas fa-plane text-2xl opacity-75"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 群組設置 -->
+          <div class="card-enhanced p-4 rounded-xl">
+            <h3 class="text-md font-medium text-gray-300 mb-4 flex items-center">
+              <i class="fas fa-users mr-2 text-green-400"></i>WhatsApp 群組設定
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <label for="groupName" class="block text-sm font-medium text-gray-300 mb-2">群組名稱</label>
+                <div class="relative">
+                  <input type="text" id="groupName" 
+                         class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input pr-10 touch-feedback"
+                         placeholder="輸入群組名稱">
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <i id="groupNameStatus" class="fas fa-check text-green-400 hidden"></i>
+                  </div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">機械人只會在此群組中回應消息</p>
+              </div>
+            </div>
+          </div>
+        <!-- AI 功能設定 -->
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+          <h3 class="text-md font-medium text-gray-300 mb-4">AI 圖片識別功能</h3>
+          <div class="space-y-4">
+            <label class="flex items-center justify-between cursor-pointer select-none">
+              <span class="text-sm font-medium text-gray-300">啟用 AI 圖片識別</span>
+              <span class="relative inline-block w-12 h-6">
+                <input type="checkbox" id="enableAI" class="sr-only">
+                <span class="block w-12 h-6 bg-gray-700 rounded-full"></span>
+                <span id="aiDot" class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out"></span>
+              </span>
+            </label>
+            <div id="aiSettings" class="space-y-4 hidden">
+              <div>
+                <label for="aiConfidenceThreshold" class="block text-sm font-medium text-gray-300 mb-2">AI 識別可信度閾值</label>
+                <div class="flex items-center space-x-4">
+                  <input type="range" id="aiConfidenceThreshold" min="0" max="100" step="1"
+                         class="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                  <span id="aiConfidenceValue" class="text-sm text-gray-300 w-12 text-right">80%</span>
+                </div>
+                <p class="mt-1 text-xs text-gray-400">當 AI 識別結果的可信度低於此值時，系統會要求您確認</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 智能訊息格式設定 -->
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl card-enhanced">
+          <div class="flex items-center justify-between mb-3">
+            <label for="messageFormat" class="block text-sm font-medium text-gray-300">發送格式</label>
+            <div class="flex space-x-2">
+              <button id="formatHelper" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white touch-feedback" title="格式助手">
+                <i class="fas fa-question-circle mr-1"></i>助手
+              </button>
+              <button id="previewFormat" class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 rounded text-white touch-feedback" title="預覽格式">
+                <i class="fas fa-eye mr-1"></i>預覽
+              </button>
+            </div>
+          </div>
+          <div class="relative">
+            <textarea id="messageFormat" rows="4" 
+                      class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input touch-feedback"
+                      placeholder="日期: {date}&#10;項目: {item}&#10;銀碼: ${amount}&#10;備註: {note}&#10;收據: {imageUrl}"></textarea>
+            <div class="absolute bottom-2 right-2">
+              <button id="insertVariable" class="text-gray-400 hover:text-green-400 text-sm touch-feedback" title="插入變數">
+                <i class="fas fa-plus-circle"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-1">
+            <span class="inline-block px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded cursor-pointer hover:bg-green-600 touch-feedback" data-variable="{date}">日期</span>
+            <span class="inline-block px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded cursor-pointer hover:bg-green-600 touch-feedback" data-variable="{item}">項目</span>
+            <span class="inline-block px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded cursor-pointer hover:bg-green-600 touch-feedback" data-variable="{amount}">金額</span>
+            <span class="inline-block px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded cursor-pointer hover:bg-green-600 touch-feedback" data-variable="{note}">備註</span>
+            <span class="inline-block px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded cursor-pointer hover:bg-green-600 touch-feedback" data-variable="{imageUrl}">收據</span>
+          </div>
+        </div>
+        <!-- Google Drive 設置 -->
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+          <label for="driveFolderUrl" class="block text-sm font-medium text-gray-300 mb-2">Google Drive 文件夾 URL</label>
+          <input type="text" id="driveFolderUrl" 
+                 class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                 placeholder="輸入 Google Drive 文件夾 URL">
+          <p class="mt-1 text-xs sm:text-sm text-gray-400">如何獲取：打開 Google Drive，創建一個資料夾，複製 URL 中的 Folder ID</p>
+        </div>
+        <!-- Google Sheet 設置 -->
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+          <label for="sheetUrl" class="block text-sm font-medium text-gray-300 mb-2">Google Sheet URL</label>
+          <input type="text" id="sheetUrl" 
+                 class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                 placeholder="輸入 Google Sheet URL">
+          <p class="mt-1 text-xs sm:text-sm text-gray-400">如何獲取：打開 Google Sheet，複製 URL 中的 Sheet ID</p>
+        </div>
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+          <label for="sheetName" class="block text-sm font-medium text-gray-300 mb-2">Google Sheet 工作表名稱</label>
+          <input type="text" id="sheetName" 
+                 class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                 placeholder="輸入工作表名稱">
+        </div>
+        <!-- 自訂問題 -->
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+          <label class="block text-sm font-medium text-gray-300 mb-2">自訂問題</label>
+          <div id="customQuestions" class="space-y-3 sm:space-y-4"></div>
+          <button id="addQuestion" 
+                  class="mt-4 px-4 py-2 text-gray-300 rounded-lg hover:bg-white/10 transition-all touch-feedback w-full sm:w-auto">
+            <i class="fas fa-plus mr-2"></i>新增問題
+          </button>
+        </div>
+        </div>
+
+        <!-- AI智能儀表板分頁 -->
+        <div id="analyticsSettings" class="space-y-6 hidden">
+          <!-- 儀表板入口卡片 -->
+          <div class="card-enhanced p-6 rounded-xl bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20">
+            <div class="text-center">
+              <div class="mb-4">
+                <i class="fas fa-chart-line text-4xl text-purple-400 mb-2"></i>
+                <h3 class="text-xl font-bold text-white mb-2">AI 智能儀表板</h3>
+                <p class="text-gray-300 text-sm">
+                  使用 Claude 3 Haiku AI 自動分析您的費用數據，<br>
+                  生成個性化的可視化圖表和智能洞察
+                </p>
+              </div>
+              
+              <div class="mb-6">
+                <button id="openAnalytics" class="btn-primary px-8 py-4 rounded-xl text-white font-semibold text-lg hover:scale-105 transform transition-all duration-300 shadow-lg">
+                  <i class="fas fa-rocket mr-3"></i>
+                  啟動智能儀表板
+                </button>
+              </div>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                <div class="bg-white/5 rounded-lg p-3">
+                  <i class="fas fa-brain text-blue-400 mb-2"></i>
+                  <p class="text-gray-300">AI 自動分析</p>
+                </div>
+                <div class="bg-white/5 rounded-lg p-3">
+                  <i class="fas fa-chart-pie text-green-400 mb-2"></i>
+                  <p class="text-gray-300">多種圖表類型</p>
+                </div>
+                <div class="bg-white/5 rounded-lg p-3">
+                  <i class="fas fa-lightbulb text-yellow-400 mb-2"></i>
+                  <p class="text-gray-300">智能洞察建議</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 功能說明 -->
+          <div class="card-enhanced p-4 rounded-xl">
+            <h4 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+              <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+              功能特色
+            </h4>
+            <div class="space-y-3">
+              <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-400 mt-0.5"></i>
+                <div>
+                  <p class="text-gray-300 font-medium">完全自適應分析</p>
+                  <p class="text-gray-400 text-sm">AI 自動識別您的數據結構，無需手動配置欄位</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-400 mt-0.5"></i>
+                <div>
+                  <p class="text-gray-300 font-medium">智能圖表推薦</p>
+                  <p class="text-gray-400 text-sm">根據數據特徵自動推薦最適合的視覺化圖表</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-400 mt-0.5"></i>
+                <div>
+                  <p class="text-gray-300 font-medium">個性化洞察</p>
+                  <p class="text-gray-400 text-sm">AI 分析您的消費模式，提供節省建議和趨勢預測</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-3">
+                <i class="fas fa-check-circle text-green-400 mt-0.5"></i>
+                <div>
+                  <p class="text-gray-300 font-medium">實時數據更新</p>
+                  <p class="text-gray-400 text-sm">支持數據變化時自動重新分析和更新圖表</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 數據要求說明 -->
+          <div class="card-enhanced p-4 rounded-xl border border-yellow-500/20 bg-yellow-900/10">
+            <h4 class="text-lg font-semibold text-yellow-200 mb-3 flex items-center">
+              <i class="fas fa-exclamation-triangle mr-2 text-yellow-400"></i>
+              使用前提
+            </h4>
+            <div class="text-sm text-yellow-100 space-y-2">
+              <p>• 確保已配置 Google Sheets 並有費用數據</p>
+              <p>• AI 需要至少 5-10 筆數據才能進行有效分析</p>
+              <p>• 建議數據包含日期、金額、項目等基本欄位</p>
+              <p>• 首次分析可能需要 10-30 秒時間</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF 發票模版分頁 -->
+        <div id="pdfTemplateSettings" class="space-y-4 hidden">
+          <!-- 公司資訊 -->
+          <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+            <h3 class="text-md font-medium text-gray-300 mb-4">公司資訊</h3>
+            <div class="space-y-4">
+              <div>
+                <label for="companyName" class="block text-sm font-medium text-gray-300 mb-2">公司名稱</label>
+                <input type="text" id="companyName" 
+                       class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                       placeholder="輸入公司名稱"
+                       onchange="updateCompanyName(this.value)">
+              </div>
+              <div>
+                <label for="companyAddress" class="block text-sm font-medium text-gray-300 mb-2">公司地址</label>
+                <textarea id="companyAddress" rows="2"
+                          class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                          placeholder="輸入公司地址"
+                          onchange="updateCompanyAddress(this.value)"></textarea>
+              </div>
+              <div>
+                <label for="companyPhone" class="block text-sm font-medium text-gray-300 mb-2">公司電話</label>
+                <input type="text" id="companyPhone" 
+                       class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                       placeholder="輸入公司電話"
+                       onchange="updateCompanyPhone(this.value)">
+              </div>
+            </div>
+          </div>
+          <!-- 發票模版設定 -->
+          <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+            <h3 class="text-md font-medium text-gray-300 mb-4">發票模版設定</h3>
+            <div class="space-y-4">
+              <div>
+                <label for="invoiceTitle" class="block text-sm font-medium text-gray-300 mb-2">發票標題</label>
+                <input type="text" id="invoiceTitle" 
+                       class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                       placeholder="輸入發票標題"
+                       onchange="updateInvoiceTitle(this.value)">
+              </div>
+              <div>
+                <label for="invoiceNumberPrefix" class="block text-sm font-medium text-gray-300 mb-2">發票編號前綴</label>
+                <input type="text" id="invoiceNumberPrefix" 
+                       class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                       placeholder="例如：INV-"
+                       onchange="updateInvoiceNumberPrefix(this.value)">
+              </div>
+              <div>
+                <label for="invoiceFooter" class="block text-sm font-medium text-gray-300 mb-2">發票頁尾</label>
+                <textarea id="invoiceFooter" rows="2"
+                          class="w-full px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                          placeholder="輸入發票頁尾文字"
+                          onchange="updateInvoiceFooter(this.value)"></textarea>
+              </div>
+            </div>
+          </div>
+          <!-- 發票項目設定 -->
+          <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+            <h3 class="text-md font-medium text-gray-300 mb-4">發票項目設定</h3>
+            <div id="invoiceFieldsList" class="space-y-3"></div>
+            <button id="addInvoiceField" class="mt-4 px-4 py-2 text-gray-300 rounded-lg hover:bg-white/10 transition-all touch-feedback w-full sm:w-auto">
+              <i class="fas fa-plus mr-2"></i>新增發票欄位
+            </button>
+          </div>
+          <!-- 預覽區域 -->
+          <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl">
+            <h3 class="text-md font-medium text-gray-300 mb-4">預覽</h3>
+            <div id="pdfPreview" class="bg-white p-4 rounded-lg min-h-[400px]">
+              <!-- 預覽內容將由 JavaScript 動態生成 -->
+            </div>
+          </div>
+        </div>
+        <!-- 儲存按鈕 -->
+        <div class="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+          <button id="saveSettings" 
+                  class="px-6 py-2 text-white rounded-lg hover:bg-opacity-90 transition-all glow touch-feedback mobile-button">
+            <i class="fas fa-save mr-2"></i>儲存設置
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全局變數
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    let qrTimer = null;
+    let qrCountdown = 0;
+    let autoSaveTimer = null;
+    
+    if (!userId) {
+      showNotification('缺少 userId，無法載入設置頁面', 'error');
+      setTimeout(() => window.location.href = '/', 2000);
+    }
+
+    // 移動端增強功能
+    const isMobile = window.innerWidth <= 640;
+    
+    // 震動反饋功能
+    function vibrate(pattern = [50]) {
+      if ('vibrate' in navigator && isMobile) {
+        navigator.vibrate(pattern);
+      }
+    }
+    
+    // 觸摸反饋
+    document.addEventListener('touchstart', function(e) {
+      if (e.target.classList.contains('vibrate-on-touch')) {
+        vibrate([25]);
+      }
+    });
+
+    // 快速模板配置
+    const templates = {
+      personal: {
+        name: '個人記帳',
+        groupName: '我的記帳群組',
+        messageFormat: '📅 日期: {date}\n💰 項目: {item}\n💵 金額: ${amount}\n📝 備註: {note}\n📸 收據: {imageUrl}',
+        customQuestions: [
+          { question: '這筆費用的類別是什麼？', field: 'category' },
+          { question: '付款方式？', field: 'paymentMethod' }
+        ]
+      },
+      business: {
+        name: '商業報銷',
+        groupName: '公司報銷群組',
+        messageFormat: '🏢 報銷單\n📅 日期: {date}\n📋 項目: {item}\n💰 金額: ${amount}\n👤 申請人: {requester}\n📝 用途: {note}\n📸 收據: {imageUrl}',
+        customQuestions: [
+          { question: '申請人姓名？', field: 'requester' },
+          { question: '費用類別？', field: 'category' },
+          { question: '部門？', field: 'department' }
+        ]
+      },
+      family: {
+        name: '家庭共用',
+        groupName: '家庭記帳群組',
+        messageFormat: '🏠 家庭開支\n📅 日期: {date}\n🛒 項目: {item}\n💰 金額: ${amount}\n👤 付款人: {payer}\n📝 備註: {note}\n📸 收據: {imageUrl}',
+        customQuestions: [
+          { question: '誰付的錢？', field: 'payer' },
+          { question: '是家庭必需品嗎？', field: 'necessity' }
+        ]
+      },
+      travel: {
+        name: '旅遊記帳',
+        groupName: '旅遊開支群組',
+        messageFormat: '✈️ 旅遊開支\n📅 日期: {date}\n🎯 項目: {item}\n💰 金額: ${amount}\n📍 地點: {location}\n📝 備註: {note}\n📸 收據: {imageUrl}',
+        customQuestions: [
+          { question: '在哪個城市/地點？', field: 'location' },
+          { question: '費用類型？(交通/住宿/餐飲/景點)', field: 'travelType' }
+        ]
+      }
+    };
+    
+    // 通知系統
+    function showNotification(message, type = 'info', duration = 5000) {
+      const notification = document.getElementById('notification');
+      const icon = document.getElementById('notificationIcon');
+      const messageEl = document.getElementById('notificationMessage');
+      const content = document.getElementById('notificationContent');
+      
+      // 設置圖標和顏色
+      const config = {
+        success: { icon: 'fa-check-circle', color: 'text-green-500', border: 'border-green-500' },
+        error: { icon: 'fa-exclamation-circle', color: 'text-red-500', border: 'border-red-500' },
+        warning: { icon: 'fa-exclamation-triangle', color: 'text-yellow-500', border: 'border-yellow-500' },
+        info: { icon: 'fa-info-circle', color: 'text-blue-500', border: 'border-blue-500' }
+      };
+      
+      const typeConfig = config[type] || config.info;
+      icon.className = `fas ${typeConfig.icon} ${typeConfig.color}`;
+      content.className = `bg-white rounded-lg shadow-lg p-4 border-l-4 ${typeConfig.border}`;
+      messageEl.textContent = message;
+      
+      // 顯示通知
+      notification.classList.add('show');
+      
+      // 自動隱藏
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, duration);
+    }
+    
+    // 關閉通知按鈕
+    document.getElementById('notificationClose').addEventListener('click', () => {
+      document.getElementById('notification').classList.remove('show');
+    });
+    
+    // 進度條控制
+    function showProgress() {
+      document.getElementById('progressBar').classList.remove('hidden');
+    }
+    
+    function hideProgress() {
+      document.getElementById('progressBar').classList.add('hidden');
+    }
+    
+    // 狀態更新函數
+    function updateConnectionStatus() {
+      const statusEl = document.getElementById('connectionStatus');
+      const statusTextEl = document.getElementById('statusText');
+      
+      // 檢查各種服務狀態
+      Promise.all([
+        checkWhatsAppStatus(),
+        checkGoogleStatus(),
+        checkAIStatus()
+      ]).then(([whatsapp, google, ai]) => {
+        if (whatsapp && google && ai) {
+          statusEl.className = 'status-indicator online absolute -top-1 -right-1';
+          statusTextEl.textContent = '所有服務正常';
+        } else if (whatsapp) {
+          statusEl.className = 'status-indicator connecting absolute -top-1 -right-1';
+          statusTextEl.textContent = '部分服務離線';
+        } else {
+          statusEl.className = 'status-indicator offline absolute -top-1 -right-1';
+          statusTextEl.textContent = '連接中斷';
+        }
+      });
+    }
+    
+    // 服務狀態檢查函數
+    async function checkWhatsAppStatus() {
+      try {
+        const response = await fetch(`/api/whatsapp/status?userId=${userId}`);
+        const data = await response.json();
+        updateServiceStatus('whatsapp', data.loggedIn);
+        return data.loggedIn;
+      } catch (error) {
+        updateServiceStatus('whatsapp', false);
+        return false;
+      }
+    }
+    
+    async function checkGoogleStatus() {
+      try {
+        const response = await fetch(`/api/health`);
+        const data = await response.json();
+        const googleOk = data.googleService === 'healthy';
+        updateServiceStatus('google', googleOk);
+        return googleOk;
+      } catch (error) {
+        updateServiceStatus('google', false);
+        return false;
+      }
+    }
+    
+    async function checkAIStatus() {
+      try {
+        const response = await fetch(`/api/health`);
+        const data = await response.json();
+        const aiOk = data.aiService === 'healthy';
+        updateServiceStatus('ai', aiOk);
+        return aiOk;
+      } catch (error) {
+        updateServiceStatus('ai', false);
+        return false;
+      }
+    }
+    
+    function updateServiceStatus(service, isOnline) {
+      const statusEl = document.getElementById(`${service}Status`);
+      const textEl = document.getElementById(`${service}StatusText`);
+      
+      if (isOnline) {
+        statusEl.className = 'status-indicator online mx-auto mb-2';
+        textEl.textContent = '正常';
+        textEl.className = 'text-sm font-medium text-green-400';
+      } else {
+        statusEl.className = 'status-indicator offline mx-auto mb-2';
+        textEl.textContent = '離線';
+        textEl.className = 'text-sm font-medium text-red-400';
+      }
+    }
+    
+    // QR 碼倒數計時
+    function startQRTimer() {
+      qrCountdown = 120; // 2分鐘
+      const timerEl = document.getElementById('qrTimer');
+      
+      qrTimer = setInterval(() => {
+        qrCountdown--;
+        const minutes = Math.floor(qrCountdown / 60);
+        const seconds = qrCountdown % 60;
+        timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} 後過期`;
+        
+        if (qrCountdown <= 0) {
+          clearInterval(qrTimer);
+          timerEl.textContent = 'QR 碼已過期';
+          document.getElementById('refreshQR').classList.remove('hidden');
+        }
+      }, 1000);
+    }
+    
+    // 自動保存功能
+    function triggerAutoSave() {
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+      
+      autoSaveTimer = setTimeout(() => {
+        saveSettings.click();
+      }, 2000);
+    }
+    
+    // 測試連接功能
+    document.getElementById('testConnection').addEventListener('click', async () => {
+      const btn = document.getElementById('testConnection');
+      btn.classList.add('loading');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>測試中...';
+      
+      showProgress();
+      vibrate([50, 100, 50]);
+      
+      try {
+        await updateConnectionStatus();
+        showNotification('連接測試完成', 'success');
+        vibrate([100]);
+      } catch (error) {
+        showNotification('連接測試失敗', 'error');
+        vibrate([200, 100, 200]);
+      } finally {
+        btn.classList.remove('loading');
+        btn.innerHTML = '<i class="fas fa-plug mr-1"></i>測試連接';
+        hideProgress();
+      }
+    });
+
+    // 快速模板應用功能
+    function applyTemplate(templateKey) {
+      const template = templates[templateKey];
+      if (!template) return;
+      
+      vibrate([100, 50, 100]);
+      
+      // 應用模板設置
+      document.getElementById('groupName').value = template.groupName;
+      document.getElementById('messageFormat').value = template.messageFormat;
+      
+      // 更新自定義問題
+      questions = [...template.customQuestions];
+      renderQuestions();
+      
+      // 顯示成功通知
+      showNotification(`已套用「${template.name}」模板`, 'success');
+      
+      // 自動保存
+      setTimeout(() => {
+        saveSettings.click();
+      }, 1000);
+    }
+
+    // 模板卡片點擊事件
+    document.addEventListener('click', function(e) {
+      const templateCard = e.target.closest('[data-template]');
+      if (templateCard) {
+        const templateKey = templateCard.dataset.template;
+        applyTemplate(templateKey);
+      }
+    });
+
+    // 移動端快捷操作
+    if (isMobile) {
+      // 快速保存
+      document.getElementById('quickSave').addEventListener('click', () => {
+        vibrate([50]);
+        saveSettings.click();
+      });
+      
+      // 快速測試
+      document.getElementById('quickTest').addEventListener('click', () => {
+        vibrate([50]);
+        document.getElementById('testConnection').click();
+      });
+      
+      // 快速模板
+      document.getElementById('quickTemplate').addEventListener('click', () => {
+        vibrate([50]);
+        showTemplateModal();
+      });
+    }
+
+    // 模板選擇器功能
+    function showTemplateModal() {
+      const modal = document.getElementById('templateModal');
+      const templateList = document.getElementById('templateList');
+      
+      // 生成模板列表
+      templateList.innerHTML = '';
+      Object.entries(templates).forEach(([key, template]) => {
+        const div = document.createElement('div');
+        div.className = 'template-card touch-feedback cursor-pointer';
+        div.dataset.template = key;
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-semibold text-white">${template.name}</h4>
+              <p class="text-sm opacity-90 text-white">點擊套用此模板</p>
+            </div>
+            <i class="fas fa-arrow-right text-white text-xl"></i>
+          </div>
+        `;
+        templateList.appendChild(div);
+      });
+      
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideTemplateModal() {
+      const modal = document.getElementById('templateModal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // 模板選擇器事件
+    document.getElementById('closeTemplateModal').addEventListener('click', hideTemplateModal);
+    document.getElementById('templateModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideTemplateModal();
+      }
+    });
+
+    // 智能變數插入功能
+    document.addEventListener('click', function(e) {
+      if (e.target.hasAttribute('data-variable')) {
+        const variable = e.target.dataset.variable;
+        const textarea = document.getElementById('messageFormat');
+        const cursorPos = textarea.selectionStart;
+        const textBefore = textarea.value.substring(0, cursorPos);
+        const textAfter = textarea.value.substring(cursorPos);
+        
+        textarea.value = textBefore + variable + textAfter;
+        textarea.focus();
+        textarea.setSelectionRange(cursorPos + variable.length, cursorPos + variable.length);
+        
+        vibrate([30]);
+        showNotification(`已插入變數 ${variable}`, 'info', 2000);
+      }
+    });
+
+    // 格式預覽功能
+    document.getElementById('previewFormat').addEventListener('click', () => {
+      const format = document.getElementById('messageFormat').value;
+      const sampleData = {
+        date: new Date().toLocaleDateString('zh-HK'),
+        item: '午餐',
+        amount: '150.00',
+        note: '與客戶用餐',
+        imageUrl: 'https://example.com/receipt.jpg'
+      };
+      
+      let preview = format;
+      Object.entries(sampleData).forEach(([key, value]) => {
+        preview = preview.replace(new RegExp(`{${key}}`, 'g'), value);
+      });
+      
+      showNotification(`預覽格式：\n${preview}`, 'info', 8000);
+    });
+
+    // 格式助手功能
+    document.getElementById('formatHelper').addEventListener('click', () => {
+      const helpText = `可用變數：
+📅 {date} - 日期
+💰 {item} - 項目名稱
+💵 {amount} - 金額
+📝 {note} - 備註
+📸 {imageUrl} - 收據連結
+
+範例格式：
+🏢 報銷單
+📅 日期: {date}
+💰 項目: {item}
+💵 金額: ${amount}
+📝 備註: {note}`;
+      
+      showNotification(helpText, 'info', 10000);
+    });
+
+    const qrSection = document.getElementById('qrSection');
+    const qrContainer = document.getElementById('qrContainer');
+    const qrCode = document.getElementById('qrCode');
+    const loadingContainer = document.getElementById('loadingContainer');
+    const groupName = document.getElementById('groupName');
+    const messageFormat = document.getElementById('messageFormat');
+    const driveFolderUrl = document.getElementById('driveFolderUrl');
+    const sheetUrl = document.getElementById('sheetUrl');
+    const sheetName = document.getElementById('sheetName');
+    const companyName = document.getElementById('companyName');
+    const customQuestions = document.getElementById('customQuestions');
+    const addQuestion = document.getElementById('addQuestion');
+    const saveSettings = document.getElementById('saveSettings');
+    const logout = document.getElementById('logout');
+    const error = document.getElementById('error');
+
+    let questions = [];
+    let invoiceFields = [];
+
+          async function checkLoginStatus() {
+        try {
+          const response = await fetch(`/api/whatsapp/status?userId=${userId}`);
+          
+          // 檢查是否需要重新登入
+          if (response.status === 401) {
+            showError('會話已過期，請重新登入');
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+            return;
+          }
+          
+          const data = await response.json();
+          
+          // 檢查是否有錯誤
+          if (data.error) {
+            showError(data.error);
+            if (data.error === '未登入') {
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 2000);
+            }
+            return;
+          }
+          
+          if (data.loggedIn) {
+            qrSection.style.display = 'none';
+            // 如果已經連接，開始狀態監控
+            startStatusMonitoring();
+          } else {
+            qrSection.style.display = 'block';
+            loadQRCode();
+          }
+        } catch (err) {
+          showError('檢查登入狀態失敗，請稍後重試');
+          console.error('檢查登入狀態錯誤:', err);
+        }
+      }
+
+    async function loadQRCode() {
+      try {
+        showProgress();
+        document.getElementById('loadingStatus').textContent = '正在生成 QR 碼...';
+        
+        const response = await fetch(`/api/whatsapp/qr?userId=${userId}`);
+        
+        // 檢查是否需要重新登入
+        if (response.status === 401) {
+          showNotification('會話已過期，請重新登入', 'error');
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+          return;
+        }
+        
+        const data = await response.json();
+        
+        // 檢查是否有錯誤
+        if (data.error) {
+          showNotification(data.error, 'error');
+          if (data.error === '未登入') {
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          }
+          return;
+        }
+        
+        if (data.status === 'alreadyLoggedIn') {
+          qrSection.style.display = 'none';
+          showNotification('WhatsApp 已連接', 'success');
+          document.getElementById('qrStatus').textContent = '(已連接)';
+        } else if (data.qrCodeUrl) {
+          loadingContainer.style.display = 'none';
+          qrContainer.style.display = 'block';
+          qrCode.src = data.qrCodeUrl;
+          document.getElementById('qrStatus').textContent = '(等待掃描)';
+          startQRTimer();
+          pollLoginStatus();
+          showNotification('QR 碼已生成，請使用 WhatsApp 掃描', 'info');
+        } else {
+          showNotification('無法生成 QR 碼，請稍後重試', 'error');
+        }
+      } catch (err) {
+        showNotification('載入 QR 碼失敗，請稍後重試', 'error');
+        console.error('載入 QR 碼錯誤:', err);
+      } finally {
+        hideProgress();
+      }
+    }
+    
+    // QR 碼重新生成功能
+    document.getElementById('refreshQR').addEventListener('click', () => {
+      if (qrTimer) clearInterval(qrTimer);
+      loadQRCode();
+    });
+
+          async function pollLoginStatus() {
+        const interval = setInterval(async () => {
+          const response = await fetch(`/api/whatsapp/status?userId=${userId}`);
+          const data = await response.json();
+          if (data.loggedIn) {
+            clearInterval(interval);
+            qrSection.style.display = 'none';
+            // 開始持續監控狀態變化
+            startStatusMonitoring();
+          }
+        }, 5000);
+      }
+
+      // WebSocket連接管理
+      let websocket = null;
+      let reconnectAttempts = 0;
+      const maxReconnectAttempts = 5;
+
+      function connectWebSocket() {
+        try {
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = `${protocol}//${window.location.host}?userId=${userId}`;
+          
+          websocket = new WebSocket(wsUrl);
+          
+          websocket.onopen = function(event) {
+            console.log('WebSocket 連接已建立');
+            reconnectAttempts = 0;
+          };
+          
+          websocket.onmessage = function(event) {
+            try {
+              const message = JSON.parse(event.data);
+              handleWebSocketMessage(message);
+            } catch (err) {
+              console.error('解析 WebSocket 消息失敗:', err);
+            }
+          };
+          
+          websocket.onclose = function(event) {
+            console.log('WebSocket 連接已關閉');
+            
+            // 嘗試重新連接
+            if (reconnectAttempts < maxReconnectAttempts) {
+              reconnectAttempts++;
+              console.log(`嘗試重新連接 WebSocket (${reconnectAttempts}/${maxReconnectAttempts})`);
+              setTimeout(connectWebSocket, 3000 * reconnectAttempts);
+            }
+          };
+          
+          websocket.onerror = function(error) {
+            console.error('WebSocket 錯誤:', error);
+          };
+          
+        } catch (err) {
+          console.error('建立 WebSocket 連接失敗:', err);
+        }
+      }
+
+      function handleWebSocketMessage(message) {
+        console.log('收到 WebSocket 消息:', message);
+        
+        switch (message.type) {
+          case 'whatsapp_disconnected':
+            console.log('WhatsApp 連接已斷開，顯示 QR 碼');
+            qrSection.style.display = 'block';
+            loadingContainer.style.display = 'block';
+            qrContainer.style.display = 'none';
+            loadQRCode();
+            break;
+            
+          case 'whatsapp_connected':
+            console.log('WhatsApp 已連接，隱藏 QR 碼');
+            qrSection.style.display = 'none';
+            break;
+            
+          case 'qr_code_generated':
+            console.log('收到新的 QR 碼');
+            if (message.qrCodeUrl) {
+              loadingContainer.style.display = 'none';
+              qrContainer.style.display = 'block';
+              qrCode.src = message.qrCodeUrl;
+            }
+            break;
+            
+          case 'connection':
+            console.log('WebSocket 連接確認:', message);
+            break;
+            
+          default:
+            console.log('未知的 WebSocket 消息類型:', message.type);
+        }
+      }
+
+      // 移除舊的輪詢監控，改為WebSocket即時通知
+      async function startStatusMonitoring() {
+        // 啟動WebSocket連接
+        connectWebSocket();
+      }
+
+    async function loadSettings() {
+      try {
+        const response = await fetch(`/api/settings?userId=${userId}`);
+        
+        // 檢查是否需要重新登入
+        if (response.status === 401) {
+          showError('會話已過期，請重新登入');
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+          return;
+        }
+        
+        const data = await response.json();
+        
+        // 檢查是否有錯誤
+        if (data.error) {
+          showError(data.error);
+          if (data.error === '未登入') {
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          }
+          return;
+        }
+        
+        groupName.value = data.groupName;
+        messageFormat.value = data.messageFormat;
+        driveFolderUrl.value = data.driveFolderId ? `https://drive.google.com/drive/folders/${data.driveFolderId}` : '';
+        sheetUrl.value = data.sheetId ? `https://docs.google.com/spreadsheets/d/${data.sheetId}` : '';
+        sheetName.value = data.sheetName;
+        companyName.value = data.companyName || '';
+        questions = data.customQuestions || [];
+        invoiceFields = data.invoiceFields || [
+          { label: '項目', field: 'item' },
+          { label: '金額', field: 'amount' }
+        ];
+        
+        // 載入 AI 設定
+        const enableAI = document.getElementById('enableAI');
+        const aiDot = document.getElementById('aiDot');
+        const aiSettings = document.getElementById('aiSettings');
+        const aiConfidenceThreshold = document.getElementById('aiConfidenceThreshold');
+        const aiConfidenceValue = document.getElementById('aiConfidenceValue');
+        
+        enableAI.checked = Boolean(data.enableAI);
+        aiSettings.style.display = data.enableAI ? 'block' : 'none';
+        aiConfidenceThreshold.value = (data.aiConfidenceThreshold || 0.8) * 100;
+        aiConfidenceValue.textContent = `${Math.round((data.aiConfidenceThreshold || 0.8) * 100)}%`;
+        
+        // 更新 AI 開關的視覺狀態
+        updateAIDot();
+        
+        renderQuestions();
+        renderInvoiceFields();
+        updatePdfPreview();
+      } catch (err) {
+        showError('載入設置失敗，請稍後重試');
+        console.error('載入設置錯誤:', err);
+      }
+    }
+
+    function renderQuestions() {
+      customQuestions.innerHTML = '';
+      questions.forEach((q, index) => {
+        const div = document.createElement('div');
+        div.className = 'p-3 sm:p-4 rounded-lg bg-gray-800/20';
+        div.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-4">
+            <div class="flex-1 space-y-2">
+              <input type="text" value="${q.question}" 
+                     class="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                     placeholder="問題 (例如：請輸入費用類別)" 
+                     onchange="updateQuestion(${index}, 'question', this.value)">
+              <input type="text" value="${q.field}" 
+                     class="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                     placeholder="對應的欄位名稱 (例如：category)" 
+                     onchange="updateQuestion(${index}, 'field', this.value)">
+              <input type="text" value="${q.prompts || ''}"
+                     class="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 mobile-input"
+                     placeholder="提示詞 (可選, 用逗號分隔, 如: 交通,午餐)"
+                     onchange="updateQuestion(${index}, 'prompts', this.value)">
+            </div>
+            <button onclick="removeQuestion(${index})" 
+                    class="px-3 py-2 text-red-400 hover:text-red-300 transition-colors touch-feedback self-end sm:self-center">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+        customQuestions.appendChild(div);
+      });
+    }
+
+    function updateQuestion(index, key, value) {
+      questions[index][key] = value;
+    }
+
+    function removeQuestion(index) {
+      questions.splice(index, 1);
+      renderQuestions();
+    }
+
+    addQuestion.addEventListener('click', () => {
+      questions.push({ question: '', field: '', prompts: '' });
+      renderQuestions();
+    });
+
+    saveSettings.addEventListener('click', async () => {
+      const btn = saveSettings;
+      try {
+        // 按鈕狀態管理
+        btn.classList.add('loading');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>儲存中...';
+        showProgress();
+        
+        const settings = {
+          userId,
+          groupName: groupName.value,
+          messageFormat: messageFormat.value,
+          customQuestions: questions,
+          driveFolderUrl: driveFolderUrl.value,
+          sheetUrl: sheetUrl.value,
+          sheetName: sheetName.value,
+          companyName: companyName.value,
+          invoiceFields: invoiceFields,
+          enableAI: document.getElementById('enableAI').checked,
+          aiConfidenceThreshold: parseInt(document.getElementById('aiConfidenceThreshold').value) / 100
+        };
+        
+        const response = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+        
+        if (response.ok) {
+          showNotification('設置已成功儲存', 'success');
+          
+          // 顯示儲存狀態
+          const saveStatus = document.getElementById('saveStatus');
+          saveStatus.classList.remove('hidden');
+          setTimeout(() => saveStatus.classList.add('hidden'), 3000);
+          
+          // 驗證群組名稱
+          if (groupName.value) {
+            document.getElementById('groupNameStatus').classList.remove('hidden');
+            setTimeout(() => document.getElementById('groupNameStatus').classList.add('hidden'), 2000);
+          }
+          
+          // 更新連接狀態
+          setTimeout(updateConnectionStatus, 1000);
+          
+        } else {
+          const data = await response.text();
+          showNotification(data || '儲存設置失敗', 'error');
+        }
+      } catch (err) {
+        showNotification('儲存設置失敗，請稍後重試', 'error');
+        console.error('儲存設置錯誤:', err);
+      } finally {
+        // 恢復按鈕狀態
+        btn.classList.remove('loading');
+        btn.innerHTML = '<i class="fas fa-save mr-2"></i>儲存設置';
+        hideProgress();
+      }
+    });
+    
+    // 為輸入框添加自動保存功能
+    [groupName, messageFormat, driveFolderUrl, sheetUrl, sheetName].forEach(input => {
+      input.addEventListener('input', triggerAutoSave);
+    });
+
+    logout.addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/logout?userId=${userId}`);
+        if (response.ok) {
+          window.location.href = '/';
+        } else {
+          showError('登出失敗，請重試');
+        }
+      } catch (err) {
+        showError('登出失敗，請稍後重試');
+        console.error('登出錯誤:', err);
+      }
+    });
+
+    function showError(message, color = 'red') {
+      const error = document.getElementById('error');
+      error.textContent = message;
+      error.style.color = color === 'red' ? '#fca5a5' : '#6ee7b7';
+      error.style.backgroundColor = color === 'red' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+      error.classList.remove('hidden');
+      setTimeout(() => error.classList.add('hidden'), 5000);
+    }
+
+    function updateCompanyName(value) {
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          companyName: value
+        })
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error('更新失敗');
+        }
+        showError('公司名稱已更新', 'green');
+      }).catch(err => {
+        showError('更新公司名稱失敗，請稍後重試');
+      });
+    }
+
+    // 分頁切換功能
+    const generalTab = document.getElementById('generalTab');
+    const analyticsTab = document.getElementById('analyticsTab');
+    const pdfTemplateTab = document.getElementById('pdfTemplateTab');
+    const generalSettings = document.getElementById('generalSettings');
+    const analyticsSettings = document.getElementById('analyticsSettings');
+    const pdfTemplateSettings = document.getElementById('pdfTemplateSettings');
+
+    // 統一的分頁切換函數
+    function switchTab(activeTab, activeSettings) {
+      // 重置所有分頁按鈕樣式
+      [generalTab, analyticsTab, pdfTemplateTab].forEach(tab => {
+        if (tab) {
+          tab.classList.remove('text-green-400', 'border-green-400');
+          tab.classList.add('text-gray-400', 'border-transparent');
+        }
+      });
+      
+      // 隱藏所有分頁內容
+      [generalSettings, analyticsSettings, pdfTemplateSettings].forEach(setting => {
+        if (setting) {
+          setting.classList.add('hidden');
+        }
+      });
+      
+      // 激活選中的分頁
+      if (activeTab) {
+        activeTab.classList.add('text-green-400', 'border-green-400');
+        activeTab.classList.remove('text-gray-400', 'border-transparent');
+      }
+      
+      if (activeSettings) {
+        activeSettings.classList.remove('hidden');
+      }
+    }
+
+    // 分頁事件監聽器
+    generalTab.addEventListener('click', () => {
+      switchTab(generalTab, generalSettings);
+    });
+
+    analyticsTab.addEventListener('click', () => {
+      switchTab(analyticsTab, analyticsSettings);
+    });
+
+    pdfTemplateTab.addEventListener('click', () => {
+      switchTab(pdfTemplateTab, pdfTemplateSettings);
+    });
+
+    // PDF 模版相關函數
+    function updateCompanyAddress(value) {
+      updatePdfTemplate({ companyAddress: value });
+    }
+
+    function updateCompanyPhone(value) {
+      updatePdfTemplate({ companyPhone: value });
+    }
+
+    function updateInvoiceTitle(value) {
+      updatePdfTemplate({ invoiceTitle: value });
+    }
+
+    function updateInvoiceNumberPrefix(value) {
+      updatePdfTemplate({ invoiceNumberPrefix: value });
+    }
+
+    function updateInvoiceFooter(value) {
+      updatePdfTemplate({ invoiceFooter: value });
+    }
+
+    function updatePdfTemplate(settings) {
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          ...settings
+        })
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error('更新失敗');
+        }
+        showError('設定已更新', 'green');
+        updatePdfPreview();
+      }).catch(err => {
+        showError('更新設定失敗，請稍後重試');
+      });
+    }
+
+    function updatePdfPreview() {
+      const preview = document.getElementById('pdfPreview');
+      const companyName = document.getElementById('companyName').value;
+      const companyAddress = document.getElementById('companyAddress').value;
+      const companyPhone = document.getElementById('companyPhone').value;
+      const invoiceTitle = document.getElementById('invoiceTitle').value;
+      const invoiceNumberPrefix = document.getElementById('invoiceNumberPrefix').value;
+      const invoiceFooter = document.getElementById('invoiceFooter').value;
+
+      // 生成預覽 HTML
+      preview.innerHTML = `
+        <div class="text-black">
+          <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold">${invoiceTitle || '發票'}</h1>
+            <p class="text-sm">${invoiceNumberPrefix || 'INV-'}2024001</p>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4 mb-8">
+            <div>
+              <h2 class="font-bold mb-2">${companyName || '公司名稱'}</h2>
+              <p class="text-sm">${companyAddress || '公司地址'}</p>
+              <p class="text-sm">${companyPhone || '公司電話'}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm">日期：${new Date().toLocaleDateString('zh-HK')}</p>
+            </div>
+          </div>
+
+          <div class="border-t border-b border-gray-300 py-4 mb-8">
+            <table class="w-full">
+              <thead>
+                <tr>
+                  <th class="text-left">項目</th>
+                  <th class="text-right">金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>示例項目</td>
+                  <td class="text-right">$1,000.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-right mb-8">
+            <p>總計：$1,000.00</p>
+          </div>
+
+          <div class="text-center text-sm">
+            ${invoiceFooter || '謝謝惠顧'}
+          </div>
+        </div>
+      `;
+    }
+
+    // 發票項目設定
+    function renderInvoiceFields() {
+      const list = document.getElementById('invoiceFieldsList');
+      list.innerHTML = '';
+      invoiceFields.forEach((f, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex space-x-2 items-center';
+        div.innerHTML = `
+          <input type="text" value="${f.label}" placeholder="顯示名稱" class="flex-1 px-2 py-1 rounded bg-gray-800/50 border border-gray-700 text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500" onchange="updateInvoiceField(${idx}, 'label', this.value)">
+          <input type="text" value="${f.field}" placeholder="對應欄位 (如: date)" class="flex-1 px-2 py-1 rounded bg-gray-800/50 border border-gray-700 text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500" onchange="updateInvoiceField(${idx}, 'field', this.value)">
+          <button onclick="removeInvoiceField(${idx})" class="px-2 py-1 text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+        `;
+        list.appendChild(div);
+      });
+    }
+    function updateInvoiceField(idx, key, value) {
+      invoiceFields[idx][key] = value;
+      saveInvoiceFields();
+    }
+    function removeInvoiceField(idx) {
+      invoiceFields.splice(idx, 1);
+      saveInvoiceFields();
+      renderInvoiceFields();
+    }
+    document.getElementById('addInvoiceField').addEventListener('click', () => {
+      invoiceFields.push({ label: '', field: '' });
+      renderInvoiceFields();
+      saveInvoiceFields();
+    });
+    function saveInvoiceFields() {
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, invoiceFields })
+      }).then(() => {
+        showError('發票欄位已更新', 'green');
+        updatePdfPreview();
+      });
+    }
+
+    // AI 設定相關函數
+    const enableAI = document.getElementById('enableAI');
+    const aiDot = document.getElementById('aiDot');
+    const aiSettings = document.getElementById('aiSettings');
+    const aiConfidenceThreshold = document.getElementById('aiConfidenceThreshold');
+    const aiConfidenceValue = document.getElementById('aiConfidenceValue');
+
+    function updateAIDot() {
+      if (enableAI.checked) {
+        aiDot.style.transform = 'translateX(24px)';
+        aiSettings.style.display = 'block';
+      } else {
+        aiDot.style.transform = 'translateX(0)';
+        aiSettings.style.display = 'none';
+      }
+    }
+    enableAI.addEventListener('change', function() {
+      updateAIDot();
+      saveSettings.click();
+    });
+    aiConfidenceThreshold.addEventListener('input', function() {
+      aiConfidenceValue.textContent = `${this.value}%`;
+      saveSettings.click();
+    });
+    // 初始化時同步 dot 狀態
+    document.addEventListener('DOMContentLoaded', function() {
+      updateAIDot();
+    });
+
+    // Analytics 儀表板功能
+    const openAnalyticsBtn = document.getElementById('openAnalytics');
+    if (openAnalyticsBtn) {
+      openAnalyticsBtn.addEventListener('click', function() {
+        // 震動反饋
+        vibrate([50]);
+        
+        // 顯示載入狀態
+        showProgress();
+        showNotification('正在啟動 AI 智能儀表板...', 'info', 2000);
+        
+        // 跳轉到 analytics 頁面
+        const analyticsUrl = `/analytics?userId=${encodeURIComponent(userId)}`;
+        
+        // 添加一些視覺效果
+        this.classList.add('loading');
+        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>載入中...';
+        
+        // 延遲跳轉以顯示載入效果
+        setTimeout(() => {
+          window.open(analyticsUrl, '_blank');
+          
+          // 重置按鈕狀態
+          this.classList.remove('loading');
+          this.innerHTML = '<i class="fas fa-rocket mr-3"></i>啟動智能儀表板';
+          hideProgress();
+        }, 1000);
+      });
+    }
+
+    // 頁面初始化
+    async function initializePage() {
+      try {
+        showProgress();
+        
+        // 初始狀態檢查
+        await updateConnectionStatus();
+        
+        // 載入設置和檢查登入狀態
+        await Promise.all([
+          checkLoginStatus(),
+          loadSettings()
+        ]);
+        
+        // 設置定期狀態更新
+        setInterval(updateConnectionStatus, 30000); // 每30秒更新一次狀態
+        
+        showNotification('頁面載入完成', 'success', 2000);
+        
+      } catch (error) {
+        showNotification('初始化失敗，請刷新頁面', 'error');
+        console.error('頁面初始化錯誤:', error);
+      } finally {
+        hideProgress();
+      }
+    }
+    
+    // 頁面載入完成後初始化
+    document.addEventListener('DOMContentLoaded', initializePage);
+    
+    // 頁面卸載時清理資源
+    window.addEventListener('beforeunload', function() {
+      if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
+      }
+      if (qrTimer) clearInterval(qrTimer);
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    });
+    
+    // 頁面可見性變化時的處理
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        // 頁面重新可見時更新狀態
+        updateConnectionStatus();
+      }
+    });
+  </script>
+</body>
+</html>

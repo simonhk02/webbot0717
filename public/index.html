@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp 智能記帳助手 - 企業級SAAS解決方案</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #25D366;
+            --secondary-color: #128C7E;
+            --accent-color: #FF6B35;
+            --dark-color: #1a1a1a;
+            --light-color: #ffffff;
+            --gray-color: #f8f9fa;
+            --text-color: #333333;
+            --gradient: linear-gradient(135deg, #25D366, #128C7E);
+            --gradient-accent: linear-gradient(135deg, #FF6B35, #F7931E);
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --shadow-hover: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* 導航欄 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .cta-button {
+            background: var(--gradient);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* 英雄區塊 */
+        .hero {
+            min-height: 100vh;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        .hero-content {
+            text-align: center;
+            color: var(--light-color);
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.2s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 1s ease 0.4s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.6s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .btn-primary {
+            background: var(--light-color);
+            color: var(--primary-color);
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--light-color);
+            padding: 1rem 2rem;
+            border: 2px solid var(--light-color);
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--light-color);
+            color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        /* 動態背景 */
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        /* 功能展示區 */
+        .features {
+            padding: 8rem 2rem;
+            background: var(--light-color);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            color: var(--dark-color);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 定價方案 */
+        .pricing {
+            padding: 8rem 2rem;
+            background: var(--gray-color);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            transform: scale(1.05);
+            border: 3px solid var(--primary-color);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .pricing-header {
+            margin-bottom: 2rem;
+        }
+
+        .pricing-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-period {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: #666;
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* 客戶評價 */
+        .testimonials {
+            padding: 8rem 2rem;
+            background: var(--light-color);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 4rem;
+            color: var(--primary-color);
+            opacity: 0.3;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .author-info h4 {
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .author-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* 數據展示 */
+        .stats {
+            padding: 6rem 2rem;
+            background: var(--gradient);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 行動召喚 */
+        .cta {
+            padding: 8rem 2rem;
+            background: var(--light-color);
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .cta p {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 頁腳 */
+        .footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: #ccc;
+            text-decoration: none;
+            line-height: 1.8;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary-color);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #333;
+            color: #999;
+        }
+
+        /* 動畫 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+            
+            .hero .subtitle {
+                font-size: 1.4rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* 登入模態框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-submit {
+            width: 100%;
+            background: var(--gradient);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="logo">
+            <i class="fab fa-whatsapp"></i>
+            WhatsApp Bot
+        </a>
+        <div class="nav-links">
+            <a href="#features">功能</a>
+            <a href="#pricing">定價</a>
+            <a href="#testimonials">評價</a>
+            <a href="#about">關於</a>
+            <a href="#" class="cta-button" onclick="openLoginModal()">登入</a>
+            <a href="#" class="cta-button" style="background: var(--gradient-accent); margin-left: 0.5rem;" onclick="openRegisterModal()">註冊</a>
+        </div>
+    </nav>
+
+    <!-- 英雄區塊 -->
+    <section class="hero">
+        <div class="animated-bg"></div>
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+        <div class="hero-content">
+            <h1>智能記帳新時代</h1>
+            <div class="subtitle">透過 WhatsApp 實現企業級財務管理</div>
+            <p>結合 AI 技術與多租戶架構，為企業提供安全、高效、智能的記帳解決方案。支援萬人級別用戶，零停機更新，企業級安全標準。</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn-primary" onclick="openModal()">免費試用</a>
+                <a href="#features" class="btn-secondary">了解更多</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能展示區 -->
+    <section class="features" id="features">
+        <h2 class="section-title">強大功能</h2>
+        <p class="section-subtitle">專為企業級應用設計的完整解決方案</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>AI 智能識別</h3>
+                <p>透過先進的 AI 技術，自動識別收據、發票，智能分類記帳項目，準確率達 95% 以上。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>多租戶架構</h3>
+                <p>支援萬人級別用戶同時使用，完全隔離的數據環境，確保企業數據安全與隱私。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>企業級安全</h3>
+                <p>端到端加密、GDPR 合規、完整審計日誌，符合國際安全標準，保護企業敏感數據。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>實時分析</h3>
+                <p>智能數據分析與可視化報表，幫助企業掌握財務狀況，制定更好的決策。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+                <h3>零停機更新</h3>
+                <p>熱重載技術支援，系統更新無需停機，確保業務連續性，提升用戶體驗。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>移動優先</h3>
+                <p>響應式設計，完美支援手機、平板、桌面設備，隨時隨地管理財務。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 定價方案區 -->
+    <section class="pricing" id="pricing">
+        <h2 class="section-title">選擇適合的方案</h2>
+        <p class="section-subtitle">靈活的定價策略，滿足不同規模企業需求</p>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3 class="pricing-name">初創企業</h3>
+                    <div class="pricing-price">$99</div>
+                    <div class="pricing-period">每月</div>
+                </div>
+                <ul class="pricing-features">
+                    <li>最多 50 個用戶</li>
+                    <li>基本 AI 識別功能</li>
+                    <li>標準安全保護</li>
+                    <li>郵件支援</li>
+                    <li>基本報表功能</li>
+                </ul>
+                <a href="#" class="btn-primary" onclick="openModal()">開始使用</a>
+            </div>
+            <div class="pricing-card featured">
+                <div class="pricing-header">
+                    <h3 class="pricing-name">成長企業</h3>
+                    <div class="pricing-price">$299</div>
+                    <div class="pricing-period">每月</div>
+                </div>
+                <ul class="pricing-features">
+                    <li>最多 500 個用戶</li>
+                    <li>進階 AI 識別功能</li>
+                    <li>企業級安全保護</li>
+                    <li>優先支援</li>
+                    <li>完整分析報表</li>
+                    <li>API 整合</li>
+                </ul>
+                <a href="#" class="btn-primary" onclick="openModal()">推薦方案</a>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3 class="pricing-name">大型企業</h3>
+                    <div class="pricing-price">$999</div>
+                    <div class="pricing-period">每月</div>
+                </div>
+                <ul class="pricing-features">
+                    <li>無限用戶</li>
+                    <li>自定義 AI 模型</li>
+                    <li>最高級安全保護</li>
+                    <li>專屬客戶經理</li>
+                    <li>自定義報表</li>
+                    <li>專屬部署</li>
+                    <li>SLA 保證</li>
+                </ul>
+                <a href="#" class="btn-primary" onclick="openModal()">聯繫銷售</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 客戶評價區 -->
+    <section class="testimonials" id="testimonials">
+        <h2 class="section-title">客戶評價</h2>
+        <p class="section-subtitle">聽聽我們的客戶怎麼說</p>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <p class="testimonial-text">WhatsApp Bot 徹底改變了我們的記帳流程。AI 識別功能非常準確，節省了大量人工處理時間。</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">張</div>
+                    <div class="author-info">
+                        <h4>張志明</h4>
+                        <p>財務總監 - 科技公司</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">多租戶架構讓我們可以為不同部門提供獨立的記帳環境，安全性和隱私保護做得很好。</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">李</div>
+                    <div class="author-info">
+                        <h4>李美玲</h4>
+                        <p>IT 經理 - 製造業</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">零停機更新功能太棒了！系統升級時完全不會影響業務運作，用戶體驗非常流暢。</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">王</div>
+                    <div class="author-info">
+                        <h4>王建國</h4>
+                        <p>營運總監 - 零售業</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 數據展示區 -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>10,000+</h3>
+                <p>活躍用戶</p>
+            </div>
+            <div class="stat-item">
+                <h3>99.9%</h3>
+                <p>系統可用性</p>
+            </div>
+            <div class="stat-item">
+                <h3>95%</h3>
+                <p>AI 識別準確率</p>
+            </div>
+            <div class="stat-item">
+                <h3>24/7</h3>
+                <p>技術支援</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 行動召喚區 -->
+    <section class="cta">
+        <h2>準備好開始了嗎？</h2>
+        <p>加入數千個已經使用 WhatsApp Bot 提升財務管理效率的企業</p>
+        <a href="#" class="btn-primary" onclick="openModal()">立即開始免費試用</a>
+    </section>
+
+    <!-- 頁腳 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>WhatsApp Bot</h3>
+                <p>企業級智能記帳解決方案，結合 AI 技術與多租戶架構，為企業提供安全、高效、智能的財務管理工具。</p>
+            </div>
+            <div class="footer-section">
+                <h3>產品</h3>
+                <a href="#features">功能特色</a><br>
+                <a href="#pricing">定價方案</a><br>
+                <a href="#testimonials">客戶評價</a><br>
+                <a href="#">API 文檔</a>
+            </div>
+            <div class="footer-section">
+                <h3>支援</h3>
+                <a href="#">使用指南</a><br>
+                <a href="#">常見問題</a><br>
+                <a href="#">技術支援</a><br>
+                <a href="#">聯繫我們</a>
+            </div>
+            <div class="footer-section">
+                <h3>公司</h3>
+                <a href="#">關於我們</a><br>
+                <a href="#">隱私政策</a><br>
+                <a href="#">服務條款</a><br>
+                <a href="#">新聞中心</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 WhatsApp Bot. 保留所有權利。</p>
+        </div>
+    </footer>
+
+    <!-- 登入模態框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
+                <button id="loginTab" class="form-submit" style="width: 50%; border-radius: 10px 0 0 10px; background: var(--gradient); color: white; border: none;" onclick="showLoginForm()">登入</button>
+                <button id="registerTab" class="form-submit" style="width: 50%; border-radius: 0 10px 10px 0; background: #eee; color: var(--primary-color); border: none;" onclick="showRegisterForm()">註冊</button>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">電子郵件</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="form-submit">登入</button>
+            </form>
+            <form id="registerForm" style="display:none;">
+                <div class="form-group">
+                    <label for="regEmail">電子郵件</label>
+                    <input type="email" id="regEmail" name="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">密碼</label>
+                    <input type="password" id="regPassword" name="regPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword2">確認密碼</label>
+                    <input type="password" id="regPassword2" name="regPassword2" required>
+                </div>
+                <button type="submit" class="form-submit">註冊</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 導航欄滾動效果
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // 模態框功能
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            showLoginForm();
+        }
+        function openRegisterModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            showRegisterForm();
+        }
+        function closeModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = '';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginTab').style.background = 'var(--gradient)';
+            document.getElementById('loginTab').style.color = 'white';
+            document.getElementById('registerTab').style.background = '#eee';
+            document.getElementById('registerTab').style.color = 'var(--primary-color)';
+        }
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = '';
+            document.getElementById('loginTab').style.background = '#eee';
+            document.getElementById('loginTab').style.color = 'var(--primary-color)';
+            document.getElementById('registerTab').style.background = 'var(--gradient-accent)';
+            document.getElementById('registerTab').style.color = 'white';
+        }
+
+        // 點擊模態框外部關閉
+        window.onclick = function(event) {
+            const modal = document.getElementById('loginModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 表單提交
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    alert('登入成功，歡迎您！');
+                    closeModal();
+                    if (data.userId) {
+                        window.location.href = `/settings.html?userId=${encodeURIComponent(data.userId)}`;
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    const err = await res.json();
+                    alert('登入失敗：' + (err.message || '請檢查帳號密碼'));
+                }
+            } catch (error) {
+                alert('登入時發生錯誤，請稍後再試。');
+            }
+        });
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const password2 = document.getElementById('regPassword2').value;
+            if(password !== password2) {
+                alert('兩次密碼不一致，請重新輸入。');
+                return;
+            }
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                if (res.ok) {
+                    alert('註冊成功，請登入。');
+                    showLoginForm();
+                } else {
+                    const err = await res.json();
+                    alert('註冊失敗：' + (err.message || '請檢查資料'));
+                }
+            } catch (error) {
+                alert('註冊時發生錯誤，請稍後再試。');
+            }
+        });
+
+        // 平滑滾動
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

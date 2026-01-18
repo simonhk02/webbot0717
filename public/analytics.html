@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 AI 智能儀表板 - WhatsApp 費用分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .filter-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .insight-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .tab-container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .quality-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .quality-excellent { background: #10b981; color: white; }
+        .quality-good { background: #3b82f6; color: white; }
+        .quality-fair { background: #f59e0b; color: white; }
+        .quality-poor { background: #ef4444; color: white; }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- 標題區域 -->
+        <div class="glassmorphism p-6 mb-6 text-center">
+            <h1 class="text-4xl font-bold text-white mb-2">
+                🧠 AI 智能儀表板
+            </h1>
+            <p class="text-white/80 text-lg">
+                基於 Claude AI 的智能數據分析與洞察
+            </p>
+            <div id="lastUpdated" class="text-white/60 text-sm mt-2"></div>
+        </div>
+
+        <!-- 月份篩選器 -->
+        <div class="filter-container">
+            <div class="flex flex-wrap items-center gap-4">
+                <label class="text-white font-semibold">📅 月份篩選:</label>
+                <select id="monthFilter" class="bg-white/20 text-white border border-white/30 rounded-lg px-4 py-2 backdrop-blur-sm">
+                    <option value="">所有月份</option>
+                </select>
+                <button id="applyFilter" class="btn-primary">
+                    🔍 應用篩選
+                </button>
+                <button id="clearFilter" class="btn-secondary">
+                    🗑️ 清除篩選
+                </button>
+                <div id="filterStatus" class="text-white/80 text-sm"></div>
+            </div>
+        </div>
+
+        <!-- 標籤導航 -->
+        <div class="tab-container">
+            <button class="tab-button active" onclick="switchTab('overview')">📊 概覽</button>
+            <button class="tab-button" onclick="switchTab('charts')">📈 圖表</button>
+            <button class="tab-button" onclick="switchTab('insights')">💡 洞察</button>
+            <button class="tab-button" onclick="switchTab('report')">📋 完整報告</button>
+            <button class="tab-button" onclick="switchTab('data')">🔍 數據詳情</button>
+        </div>
+
+        <!-- 載入狀態 -->
+        <div id="loadingContainer" class="glassmorphism p-8 text-center">
+            <div class="loading-spinner"></div>
+            <p class="text-white mt-4 text-lg">🤖 AI 正在分析您的數據...</p>
+            <p class="text-white/70 text-sm">這可能需要幾秒鐘時間</p>
+        </div>
+
+        <!-- 錯誤信息 -->
+        <div id="errorContainer" class="glassmorphism p-6 text-center hidden">
+            <div class="text-red-300 text-xl mb-4">❌ 分析失敗</div>
+            <div id="errorMessage" class="text-white/80"></div>
+            <button onclick="generateDashboard()" class="btn-primary mt-4">
+                🔄 重新分析
+            </button>
+        </div>
+
+        <!-- 概覽標籤 -->
+        <div id="overview-content" class="tab-content active">
+            <!-- 統計卡片網格 -->
+            <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                <!-- 統計卡片將在這裡動態生成 -->
+            </div>
+
+            <!-- 數據品質指示器 -->
+            <div class="glassmorphism p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4">📊 數據概要</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
+                    <div class="text-white">
+                        <div class="text-2xl font-bold" id="totalRecords">-</div>
+                        <div class="text-sm opacity-80">總記錄</div>
+                    </div>
+                    <div class="text-white">
+                        <div class="text-2xl font-bold" id="totalFields">-</div>
+                        <div class="text-sm opacity-80">數據欄位</div>
+                    </div>
+                    <div class="text-white">
+                        <div class="text-2xl font-bold" id="sheetName">-</div>
+                        <div class="text-sm opacity-80">工作表</div>
+                    </div>
+                    <div class="text-white">
+                        <div class="text-2xl font-bold" id="aiModel">Claude 3</div>
+                        <div class="text-sm opacity-80">AI 模型</div>
+                    </div>
+                    <div class="text-white">
+                        <div class="text-2xl font-bold" id="availableMonths">-</div>
+                        <div class="text-sm opacity-80">可用月份</div>
+                    </div>
+                    <div class="text-white">
+                        <div class="text-2xl font-bold">
+                            <span id="dataQuality" class="quality-indicator">-</span>
+                        </div>
+                        <div class="text-sm opacity-80">分析信心</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 圖表標籤 -->
+        <div id="charts-content" class="tab-content">
+            <div id="chartsContainer">
+                <!-- 圖表將在這裡動態生成 -->
+            </div>
+        </div>
+
+        <!-- 洞察標籤 -->
+        <div id="insights-content" class="tab-content">
+            <div class="glassmorphism p-6">
+                <h3 class="text-2xl font-bold text-white mb-6">💡 AI 智能洞察</h3>
+                <div id="insightsContainer">
+                    <!-- 洞察將在這裡動態生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 完整報告標籤 -->
+        <div id="report-content" class="tab-content">
+            <div class="glassmorphism p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-white">📋 AI 完整分析報告</h3>
+                    <button id="exportReport" class="btn-primary">
+                        📄 匯出報告
+                    </button>
+                </div>
+                <div id="fullReportContainer" class="bg-white/10 rounded-lg p-6 text-white">
+                    <!-- 完整報告將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 數據詳情標籤 -->
+        <div id="data-content" class="tab-content">
+            <div class="glassmorphism p-6">
+                <h3 class="text-2xl font-bold text-white mb-6">🔍 數據源詳情</h3>
+                <div id="dataDetailsContainer" class="space-y-4">
+                    <!-- 數據詳情將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁腳 -->
+        <div class="glassmorphism p-4 mt-8 text-center">
+            <p class="text-white/60 text-sm">
+                © 2024 WhatsApp AI 費用管理系統 - 智能分析由 Claude 3 Haiku 驅動
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let currentDashboard = null;
+        let currentUserId = null;
+        let availableMonths = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 從 URL 獲取用戶 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            currentUserId = urlParams.get('userId');
+            
+            if (!currentUserId) {
+                showError('缺少用戶 ID 參數');
+                return;
+            }
+
+            // 綁定事件
+            document.getElementById('applyFilter').addEventListener('click', applyFilter);
+            document.getElementById('clearFilter').addEventListener('click', clearFilter);
+            document.getElementById('exportReport').addEventListener('click', exportReport);
+
+            // 載入可用月份並生成儀表板
+            loadAvailableMonths().then(() => {
+                generateDashboard();
+            });
+        });
+
+        // 載入可用月份
+        async function loadAvailableMonths() {
+            try {
+                const response = await fetch(`/api/analytics/available-months?userId=${currentUserId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    availableMonths = data.months || [];
+                    
+                    const monthFilter = document.getElementById('monthFilter');
+                    monthFilter.innerHTML = '<option value="">所有月份</option>';
+                    
+                    availableMonths.forEach(month => {
+                        const option = document.createElement('option');
+                        option.value = month;
+                        option.textContent = formatMonth(month);
+                        monthFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.warn('載入可用月份失敗:', error);
+            }
+        }
+
+        // 生成儀表板
+        async function generateDashboard(filterMonth = null) {
+            showLoading();
+            
+            try {
+                let url = `/api/analytics/dashboard?userId=${currentUserId}`;
+                if (filterMonth) {
+                    url += `&filterMonth=${filterMonth}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || '生成儀表板失敗');
+                }
+                
+                currentDashboard = data.data;
+                renderDashboard(currentDashboard);
+                hideLoading();
+                
+                // 更新篩選狀態
+                updateFilterStatus(filterMonth);
+                
+            } catch (error) {
+                console.error('生成儀表板失敗:', error);
+                showError(error.message);
+            }
+        }
+
+        // 渲染儀表板
+        function renderDashboard(dashboard) {
+            // 更新標題信息
+            document.getElementById('lastUpdated').textContent = 
+                `最後更新: ${new Date(dashboard.lastUpdated).toLocaleString('zh-TW')}`;
+
+            // 渲染統計卡片
+            renderStatsGrid(dashboard.stats);
+            
+            // 渲染圖表
+            renderCharts(dashboard.charts);
+            
+            // 渲染洞察
+            renderInsights(dashboard.insights);
+            
+            // 渲染完整報告
+            renderFullReport(dashboard.fullAnalysisReport);
+            
+            // 渲染數據詳情
+            renderDataDetails(dashboard);
+            
+            // 更新數據概要
+            updateDataSummary(dashboard);
+        }
+
+        // 渲染統計卡片
+        function renderStatsGrid(stats) {
+            const container = document.getElementById('statsGrid');
+            container.innerHTML = '';
+            
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card card-hover';
+                card.innerHTML = `
+                    <div class="text-4xl mb-3">${stat.icon}</div>
+                    <div class="text-white/90 text-sm font-medium mb-2">${stat.title}</div>
+                    <div class="text-white text-2xl font-bold mb-1">${stat.value}</div>
+                    ${stat.subtitle ? `<div class="text-white/70 text-xs">${stat.subtitle}</div>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 渲染圖表
+        function renderCharts(charts) {
+            const container = document.getElementById('chartsContainer');
+            container.innerHTML = '';
+            
+            charts.forEach((chart, index) => {
+                const chartDiv = document.createElement('div');
+                chartDiv.className = 'chart-container';
+                chartDiv.innerHTML = `
+                    <h4 class="text-xl font-bold text-gray-800 mb-2">${chart.title}</h4>
+                    <p class="text-gray-600 text-sm mb-4">${chart.description}</p>
+                    <div style="position: relative; height: 400px;">
+                        <canvas id="chart-${index}"></canvas>
+                    </div>
+                `;
+                container.appendChild(chartDiv);
+                
+                // 渲染圖表
+                const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+                new Chart(ctx, {
+                    type: chart.type,
+                    data: chart.data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (chart.type === 'doughnut') {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                                            return `${context.label}: $${context.raw.toLocaleString()} (${percentage}%)`;
+                                        }
+                                        return `${context.dataset.label}: $${context.raw.toLocaleString()}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: chart.type !== 'doughnut' ? {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        } : {}
+                    }
+                });
+            });
+        }
+
+        // 渲染洞察
+        function renderInsights(insights) {
+            const container = document.getElementById('insightsContainer');
+            container.innerHTML = '';
+            
+            if (!insights || insights.length === 0) {
+                container.innerHTML = '<p class="text-white/70">暫無 AI 洞察</p>';
+                return;
+            }
+            
+            insights.forEach((insight, index) => {
+                const insightDiv = document.createElement('div');
+                insightDiv.className = 'insight-item';
+                insightDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-xl mr-3">💡</span>
+                        <div>
+                            <div class="font-semibold mb-1">洞察 ${index + 1}</div>
+                            <div class="text-sm opacity-90">${insight}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(insightDiv);
+            });
+        }
+
+        // 渲染完整報告
+        function renderFullReport(report) {
+            const container = document.getElementById('fullReportContainer');
+            if (report) {
+                // 將報告文本轉換為 HTML 格式
+                const formattedReport = report
+                    .replace(/^# (.+)$/gm, '<h2 class="text-2xl font-bold mt-6 mb-4 text-yellow-300">$1</h2>')
+                    .replace(/^## (.+)$/gm, '<h3 class="text-xl font-bold mt-4 mb-3 text-blue-300">$1</h3>')
+                    .replace(/^### (.+)$/gm, '<h4 class="text-lg font-semibold mt-3 mb-2 text-green-300">$1</h4>')
+                    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-yellow-200">$1</strong>')
+                    .replace(/\n\n/g, '</p><p class="mb-3">')
+                    .replace(/^(.+)$/gm, '<p class="mb-3">$1</p>');
+                
+                container.innerHTML = formattedReport;
+            } else {
+                container.innerHTML = '<p class="text-white/70">報告生成中...</p>';
+            }
+        }
+
+        // 渲染數據詳情
+        function renderDataDetails(dashboard) {
+            const container = document.getElementById('dataDetailsContainer');
+            const dataSource = dashboard.dataSource;
+            
+            container.innerHTML = `
+                <div class="bg-white/10 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-white mb-3">📊 數據源信息</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="text-white/80">
+                            <span class="font-medium">試算表 ID:</span><br>
+                            <code class="text-xs bg-black/20 px-2 py-1 rounded">${dataSource.spreadsheetId}</code>
+                        </div>
+                        <div class="text-white/80">
+                            <span class="font-medium">工作表名稱:</span><br>
+                            <span class="text-white">${dataSource.sheetName}</span>
+                        </div>
+                        <div class="text-white/80">
+                            <span class="font-medium">最後同步:</span><br>
+                            <span class="text-white">${new Date(dataSource.lastSync).toLocaleString('zh-TW')}</span>
+                        </div>
+                        <div class="text-white/80">
+                            <span class="font-medium">分析信心度:</span><br>
+                            <span class="text-white">${Math.round(dataSource.confidence * 100)}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white/10 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-white mb-3">🏷️ 欄位結構</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                        ${dataSource.headers.map(header => 
+                            `<span class="bg-white/20 px-2 py-1 rounded text-white">${header || '(空白)'}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新數據概要
+        function updateDataSummary(dashboard) {
+            document.getElementById('totalRecords').textContent = dashboard.dataSource.headers.length;
+            document.getElementById('totalFields').textContent = dashboard.stats.find(s => s.title === '記錄數量')?.value || '-';
+            document.getElementById('sheetName').textContent = dashboard.dataSource.sheetName;
+            document.getElementById('availableMonths').textContent = dashboard.availableMonths?.length || 0;
+            
+            const qualityElement = document.getElementById('dataQuality');
+            const quality = dashboard.dataQuality || 'unknown';
+            qualityElement.textContent = getQualityText(quality);
+            qualityElement.className = `quality-indicator quality-${quality}`;
+        }
+
+        // 標籤切換
+        function switchTab(tabName) {
+            // 隱藏所有內容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有按鈕的活動狀態
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 顯示選中的內容
+            document.getElementById(`${tabName}-content`).classList.add('active');
+            
+            // 激活選中的按鈕
+            event.target.classList.add('active');
+        }
+
+        // 應用篩選
+        function applyFilter() {
+            const filterMonth = document.getElementById('monthFilter').value;
+            if (filterMonth) {
+                generateDashboard(filterMonth);
+            } else {
+                generateDashboard();
+            }
+        }
+
+        // 清除篩選
+        function clearFilter() {
+            document.getElementById('monthFilter').value = '';
+            generateDashboard();
+        }
+
+        // 更新篩選狀態
+        function updateFilterStatus(filterMonth) {
+            const statusElement = document.getElementById('filterStatus');
+            if (filterMonth) {
+                statusElement.innerHTML = `📅 正在顯示: <strong>${formatMonth(filterMonth)}</strong>`;
+            } else {
+                statusElement.innerHTML = '📊 顯示所有數據';
+            }
+        }
+
+        // 匯出報告
+        function exportReport() {
+            if (!currentDashboard || !currentDashboard.fullAnalysisReport) {
+                alert('暫無可匯出的報告');
+                return;
+            }
+            
+            const blob = new Blob([currentDashboard.fullAnalysisReport], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `AI分析報告_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // 輔助函數
+        function formatMonth(month) {
+            const [year, monthNum] = month.split('-');
+            return `${year}年${monthNum}月`;
+        }
+
+        function getQualityText(quality) {
+            const qualityMap = {
+                'excellent': '優秀',
+                'good': '良好', 
+                'fair': '一般',
+                'poor': '較差',
+                'unknown': '未知'
+            };
+            return qualityMap[quality] || '未知';
+        }
+
+        function showLoading() {
+            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('errorContainer').classList.add('hidden');
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'block';
+            });
+            // 重新激活當前標籤
+            document.querySelector('.tab-button.active').click();
+        }
+
+        function showError(message) {
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('errorContainer').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+    </script>
+</body>
+</html> 
